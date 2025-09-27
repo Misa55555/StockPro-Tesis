@@ -17,27 +17,34 @@ class Rol(models.Model):
 
 class Usuario(AbstractUser):
     email = models.EmailField('Correo Electrónico', unique=True)
-    nombre_completo = models.CharField('Nombre Completo', max_length=150)
+    nombre_completo = models.CharField('Nombre Completo', max_length=150, blank=True)
     rol = models.ForeignKey(Rol, on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios')
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['nombre_completo']
+    # 'username' es requerido por defecto en AbstractUser, así que lo incluimos.
+    REQUIRED_FIELDS = ['username', 'nombre_completo']
 
     class Meta:
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
-        ordering = ['nombre_completo']
+        ordering = ['email']
 
-    # --- INICIO DE LA SOLUCIÓN DEFINITIVA ---
     def save(self, *args, **kwargs):
-        # Si el username está vacío, lo poblamos con el email antes de guardar.
+        # Si el username está vacío al guardar, se copia el email.
         if not self.username:
             self.username = self.email
+        
+        # Lógica de permisos automáticos
+        if self.rol:
+            if self.rol.nombre in ['Administrador', 'Vendedor']:
+                self.is_staff = True
+            else:
+                self.is_staff = False
+        
         super().save(*args, **kwargs)
-    # --- FIN DE LA SOLUCIÓN DEFINITIVA ---
 
     def __str__(self):
-        return self.nombre_completo
+        return self.email
 
 class Cliente(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, primary_key=True)

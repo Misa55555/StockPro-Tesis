@@ -1,0 +1,14 @@
+<div class="modal-header">
+    <h5 class="modal-title">{% if object %}Editar Categoría{% else %}Nueva Categoría{% endif %}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<form method="post" action="{{ request.path }}" onsubmit="return submitModalForm(this)">
+    {% csrf_token %}
+    <div class="modal-body">
+        {{ form.as_p }}
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+</form>

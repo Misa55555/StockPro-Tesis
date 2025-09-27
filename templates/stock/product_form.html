@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Editar Producto{% else %}Añadir Producto{% endif %}{% endblock %}
+
+{% block content %}
+<h1>{% if object %}Editar Producto{% else %}Añadir Nuevo Producto{% endif %}</h1>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if not object %}
+                <div class="mb-3">
+                    <label for="{{ form.busqueda_producto.id_for_label }}" class="form-label">{{ form.busqueda_producto.label }}</label>
+                    {{ form.busqueda_producto }}
+                    <div class="form-text">{{ form.busqueda_producto.help_text }}</div>
+                </div>
+                <hr>
+            {% endif %}
+
+            {{ form.media }} {# <-- ¡Esta línea es crucial para que funcionen los widgets de select2! #}
+
+            {% for field in form %}
+                {% if field.name != 'busqueda_producto' %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+                {% endif %}
+            {% endfor %}
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a href="{% url 'stock_app:product_list' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

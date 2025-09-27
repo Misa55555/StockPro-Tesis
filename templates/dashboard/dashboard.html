@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - StockPro{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Dashboard Principal</h1>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            </div>
+        <div class="col-md-6 mb-4">
+            </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    Alertas de Stock Bajo
+                </div>
+                <div class="card-body">
+                    {% if productos_bajos_stock %}
+                        <ul class="list-group list-group-flush">
+                        {% for producto in productos_bajos_stock %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ producto.nombre }}
+                                <span class="badge bg-warning text-dark">
+                                    Stock: {{ producto.get_stock_total|floatformat:2 }} / Mín: {{ producto.stock_minimo|floatformat:2 }}
+                                </span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">No hay productos con bajo stock.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    Alertas de Vencimiento (Próximos 7 días)
+                </div>
+                <div class="card-body">
+                    {% if lotes_por_vencer %}
+                        <ul class="list-group list-group-flush">
+                        {% for lote in lotes_por_vencer %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ lote.producto.nombre }}</strong><br>
+                                    <small>Cantidad en lote: {{ lote.cantidad_actual|floatformat:2 }} {{ lote.producto.unidad_medida.abreviatura }}</small>
+                                </div>
+                                <span class="badge bg-danger">
+                                    Vence: {{ lote.fecha_vencimiento|date:"d/m/Y" }}
+                                </span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">No hay productos por vencer en la próxima semana.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        </div>
+{% endblock %}

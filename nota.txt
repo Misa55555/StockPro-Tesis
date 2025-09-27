@@ -1,0 +1,7 @@
+Bueno aun queda hacer muchos cambios
+
+1. No esta funcionando el boton de agregar categoria dentro de stock
+
+2. Las secciones de Marca y unidad de medida no permiten crear, eliminar o modificar 
+
+3. Dentro del panel del dashboard no tengo un redireccionamiento o no esta andando la parte para poder moverme e irme a las secciones de stock y categorias

@@ -38,7 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Mis Aplicaciones
-    'applications.usuarios'
+    'applications.usuarios',
+    'applications.stock',
+    'applications.ventas', 
+    'applications.pedidos',
+    'applications.cierres',
+    'applications.dashboard',
+    'django_select2',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -56,10 +63,11 @@ ROOT_URLCONF = 'stockpro.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -124,3 +132,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'usuarios.Usuario'
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard_app:dashboard'
+LOGOUT_REDIRECT_URL = 'login'
