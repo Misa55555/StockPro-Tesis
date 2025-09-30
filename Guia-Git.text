@@ -1,0 +1,125 @@
+
+---
+
+# 📘 Guía de trabajo con ramas en el proyecto
+
+Este documento explica el flujo de trabajo que vamos a seguir en el proyecto.
+El objetivo es **mantener `main` estable**, usar `test` como rama de integración del equipo, y crear ramas de **feature** para trabajar en cada tarea.
+
+---
+
+## 🚀 1. Primer paso: actualizar el repositorio
+
+Siempre que vayan a empezar a trabajar:
+
+```bash
+git checkout main
+git pull origin main
+```
+
+👉 Esto asegura que tienen la última versión del código estable.
+
+---
+
+## 🌱 2. Descargar la rama `test`
+
+La rama `test` ya fue creada. Si no la tienen localmente, deben traerla del remoto:
+
+```bash
+git fetch origin
+git checkout test
+```
+
+⚡ Con esto ya pueden trabajar sobre `test`.
+
+---
+
+## 🛠 3. Crear una rama de feature para tu tarea
+
+Cada tarea o cambio debe hacerse en una **feature branch** creada desde `test`.
+
+Ejemplo:
+
+```bash
+git checkout test
+git pull origin test      # importante: traer lo último antes de crear la rama
+git checkout -b feature/nombre-tarea
+```
+
+---
+
+## ✍️ 4. Trabajar en la feature
+
+1. Hacer los cambios en el código.
+2. Guardar y preparar para commit:
+
+```bash
+git add .
+git commit -m "Descripción de la tarea realizada"
+```
+
+3. Subir la rama al remoto:
+
+```bash
+git push origin feature/nombre-tarea
+```
+
+---
+
+## 🔄 5. Fusionar en `test`
+
+Cuando termines tu tarea:
+
+1. Volver a `test`:
+
+```bash
+git checkout test
+git pull origin test      # traer lo último antes de mergear
+```
+
+2. Fusionar tu feature:
+
+```bash
+git merge feature/nombre-tarea
+```
+
+3. Subir `test` al remoto:
+
+```bash
+git push origin test
+```
+
+👉 Ahora el equipo puede validar tu tarea en `test`.
+
+---
+
+## 🏁 6. Pasar a `main`
+
+Cuando el equipo valide que está correcto:
+
+```bash
+git checkout main
+git pull origin main
+git merge test
+git push origin main
+```
+
+---
+
+## ⚠️ Reglas importantes
+
+1. **Siempre hacer `git pull` antes de arrancar a trabajar.**
+2. Nunca trabajar directamente en `main`.
+3. Toda tarea va en una rama `feature/nombre-tarea`.
+4. Cuando se termina una feature → merge a `test`.
+5. Solo después de validaciones → `test` pasa a `main`.
+
+---
+
+👉 Este flujo nos asegura:
+
+* `main` siempre tiene código estable.
+* `test` sirve para integrar y validar.
+* Las ramas de feature aíslan cada tarea.
+
+---
