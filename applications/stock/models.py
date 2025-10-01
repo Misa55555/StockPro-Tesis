@@ -108,7 +108,6 @@ class Producto(models.Model):
     # Atributos comerciales y descriptivos del producto.
     nombre = models.CharField('Nombre', max_length=200)
     descripcion = models.TextField('Descripción', blank=True)
-    precio_compra = models.DecimalField('Precio de Compra', max_digits=10, decimal_places=2, default=0)
     precio_venta = models.DecimalField('Precio de Venta', max_digits=10, decimal_places=2)
     stock_minimo = models.DecimalField('Stock Mínimo de Alerta', max_digits=10, decimal_places=3, default=5.000)
     es_visible_online = models.BooleanField('Visible en portal cliente', default=True)
@@ -170,6 +169,8 @@ class Lote(models.Model):
     )
     # Cantidad de unidades de este lote que quedan en stock.
     cantidad_actual = models.DecimalField('Cantidad Actual', max_digits=10, decimal_places=3)
+    # Precio de compra del producto (opcional).
+    precio_compra = models.DecimalField('Precio de Compra del Lote', max_digits=10, decimal_places=2, default=0)
     # Fecha de vencimiento del lote (opcional).
     fecha_vencimiento = models.DateField('Fecha de Vencimiento', null=True, blank=True)
     # Fecha en que el lote fue registrado en el sistema (se establece automáticamente).

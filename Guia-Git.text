@@ -1,4 +1,10 @@
 
+Atajos (CTRL + F)
+* "Añadir" : para crear una nueva rama
+* "Subir" : para sumir una rama que ya terminamos de crear
+* "Volver" : volver a la rama test
+* "Fusionar" : Fusionar los cambios que tenemos de la Feature a Test
+* "Mandar" : mandar todo lo que tenemos al repo (desde test)
 ---
 
 # 📘 Guía de trabajo con ramas en el proyecto
@@ -10,11 +16,11 @@ El objetivo es **mantener `main` estable**, usar `test` como rama de integració
 
 ## 🚀 1. Primer paso: actualizar el repositorio
 
-Siempre que vayan a empezar a trabajar:
+Siempre que vayan a empezar a trabajar: 
 
 ```bash
-git checkout main
-git pull origin main
+git checkout test
+git pull origin test
 ```
 
 👉 Esto asegura que tienen la última versión del código estable.
@@ -34,7 +40,7 @@ git checkout test
 
 ---
 
-## 🛠 3. Crear una rama de feature para tu tarea
+## 🛠 3. Crear una rama de feature para tu tarea ( Añadir )
 
 Cada tarea o cambio debe hacerse en una **feature branch** creada desde `test`.
 
@@ -58,7 +64,7 @@ git add .
 git commit -m "Descripción de la tarea realizada"
 ```
 
-3. Subir la rama al remoto:
+3. Subir la rama al remoto:  ( Subir )
 
 ```bash
 git push origin feature/nombre-tarea
@@ -66,7 +72,7 @@ git push origin feature/nombre-tarea
 
 ---
 
-## 🔄 5. Fusionar en `test`
+## 🔄 5. Fusionar en `test`  (Volver )
 
 Cuando termines tu tarea:
 
@@ -77,7 +83,7 @@ git checkout test
 git pull origin test      # traer lo último antes de mergear
 ```
 
-2. Fusionar tu feature:
+2. Fusionar tu feature:  (Fusionar)
 
 ```bash
 git merge feature/nombre-tarea
@@ -86,7 +92,7 @@ git merge feature/nombre-tarea
 3. Subir `test` al remoto:
 
 ```bash
-git push origin test
+git push origin test (Mandar)
 ```
 
 👉 Ahora el equipo puede validar tu tarea en `test`.

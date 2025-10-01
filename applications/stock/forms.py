@@ -2,6 +2,8 @@
 from django import forms
 from django_select2.forms import Select2Widget
 from .models import Producto, Categoria, Marca, Lote, UnidadMedida
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 class ProductoForm(forms.ModelForm):
     # Campo extra para la búsqueda de productos existentes, no se guarda en la BD.
@@ -22,7 +24,6 @@ class ProductoForm(forms.ModelForm):
             'marca',
             'unidad_medida',
             'descripcion',
-            'precio_compra',
             'precio_venta',
             'stock_minimo',
             'codigo_barras',
@@ -30,13 +31,12 @@ class ProductoForm(forms.ModelForm):
         ]
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            # --- INICIO DE LOS CAMBIOS ---
+        
             'categoria': Select2Widget,
             'marca': Select2Widget,
             'unidad_medida': Select2Widget,
-            # --- FIN DE LOS CAMBIOS ---
+           
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'precio_compra': forms.NumberInput(attrs={'class': 'form-control'}),
             'precio_venta': forms.NumberInput(attrs={'class': 'form-control'}),
             'stock_minimo': forms.NumberInput(attrs={'class': 'form-control'}),
             'codigo_barras': forms.TextInput(attrs={'class': 'form-control'}),
@@ -63,14 +63,29 @@ class MarcaForm(forms.ModelForm):
 class LoteForm(forms.ModelForm):
     class Meta:
         model = Lote
-        fields = ['producto', 'cantidad_actual', 'fecha_vencimiento']
+        fields = ['producto', 'cantidad_actual', 'precio_compra' ,'fecha_vencimiento']
         widgets = {
             # --- CAMBIO CLAVE ---
             'producto': Select2Widget,
             # --- FIN DEL CAMBIO ---
             'cantidad_actual': forms.NumberInput(attrs={'class': 'form-control'}),
+            'precio_compra': forms.NumberInput(attrs={'class': 'form-control'}),
             'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
-
+    def clean_fecha_vencimiento(self):
+        fecha_vencimiento = self.cleaned_data.get('fecha_vencimiento')
+        
+        # Si hay una fecha de vencimiento y es anterior a hoy, lanzamos un error.
+        if fecha_vencimiento and fecha_vencimiento < timezone.now().date():
+            raise ValidationError("La fecha de vencimiento no puede ser una fecha pasada.")
+            
+        return fecha_vencimiento
+    
+    def clean_cantidad_actual(self):
+        cantidad = self.cleaned_data.get('cantidad_actual')
+        if cantidad is not None and cantidad <= 0:
+            raise ValidationError("La cantidad debe ser un número mayor que cero.")
+        return cantidad
+    
 class UploadFileForm(forms.Form):
     file = forms.FileField(label="Selecciona tu archivo Excel (.xlsx)")
