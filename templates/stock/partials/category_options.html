@@ -1,4 +1,6 @@
 <option value="">---------</option>
 {% for categoria in categorias %}
-<option value="{{ categoria.pk }}">{{ categoria.nombre }}</option>
+<option value="{{ categoria.pk }}" {% if categoria.pk == object.categoria.pk %}selected{% endif %}>
+    {{ categoria.nombre }}
+</option>
 {% endfor %}

@@ -9,6 +9,8 @@ from .filters import ProductFilter
 from .models import Producto, Categoria, Marca, UnidadMedida, Lote
 # Importamos TODOS los formularios que usamos
 from .forms import ProductoForm, CategoriaForm, MarcaForm, LoteForm, UploadFileForm
+from django.shortcuts import render
+from django.http import HttpResponse
 
 
 # --- Vistas de Producto ---
@@ -61,7 +63,11 @@ class CategoryCreateView(CreateView):
 
     def form_valid(self, form):
         form.save()
-        return HttpResponse(status=204)
+        # Preparamos el contexto con todas las categorías
+        context = {'categorias': Categoria.objects.all()}
+        # Renderizamos solo el parcial con las opciones
+        return render(self.request, 'stock/partials/category_options.html', context)
+
 
 class CategoryUpdateView(UpdateView):
     model = Categoria
@@ -85,6 +91,13 @@ class MarcaCreateView(CreateView):
     form_class = MarcaForm
     template_name = "stock/partials/marca_form.html"
     success_url = reverse_lazy('stock_app:marca_list')
+
+    def form_valid(self, form):
+        form.save()
+        # Preparamos el contexto con todas las marcas
+        context = {'marcas': Marca.objects.all()}
+        # Renderizamos solo el parcial con las opciones
+        return render(self.request, 'stock/partials/marca_options.html', context)
 
 class MarcaUpdateView(UpdateView):
     model = Marca

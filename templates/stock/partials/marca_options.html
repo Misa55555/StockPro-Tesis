@@ -1,0 +1,6 @@
+<option value="">---------</option>
+{% for marca in marcas %}
+<option value="{{ marca.pk }}" {% if marca.pk == object.marca.pk %}selected{% endif %}>
+    {{ marca.nombre }}
+</option>
+{% endfor %}

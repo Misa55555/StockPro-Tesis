@@ -2,15 +2,6 @@
 
 Cosas a mejorar (Aseguradas)
 
-1. Los productos que ya vencieron tienen que tener una alerta
-Si yo pongo un "Cargar stock (Lote)" me deja agregar un vencimiento que no corresponde a la fecha osea un vencimiento pasado y no me marca en ningun lado que se vencio 
-Capaz agregarlo en la misma tabla si el producto ya esta vencido (la misma tabla de Alerta de Vencimiento (Proximo 7 dias) )
-
-
-
-2. Cuando editar un producto, no me deja editar los lotes agregados a ese producto, me deja editar el producto como tal, nose si eso esta bien asi, es verdad que dentro del administrador si puedo hacerlo
-(Para pensar). Entonces editar un producto que me deberia permitir editar los lotes o editar el producto como tal, sabiendo que dentro de el admin puedo editar el Lote (realmente esto no quiero darle tanta importancia, pero estaria bueno aclararlo)
-
 
 3. Que pasa cuando quiero vender algo por gramos o por kilo? por ejemplo vendo fiambre, los 100 gramos los vendo 1150 pesos
 Necesito tener esto presente, que si es por Gramo de esa forma 

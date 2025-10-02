@@ -23,3 +23,4 @@ urlpatterns = [
     path('app/', include('applications.stock.urls')),
     path('select2/', include('django_select2.urls')),
 ]
+

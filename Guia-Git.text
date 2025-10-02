@@ -89,10 +89,10 @@ git pull origin test      # traer lo último antes de mergear
 git merge feature/nombre-tarea
 ```
 
-3. Subir `test` al remoto:
+3. Subir `test` al remoto:(Mandar)
 
 ```bash
-git push origin test (Mandar)
+git push origin test 
 ```
 
 👉 Ahora el equipo puede validar tu tarea en `test`.

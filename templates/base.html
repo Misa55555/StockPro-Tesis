@@ -93,21 +93,30 @@
                 method: 'POST',
                 body: new FormData(form),
             })
-            .then(response => {
-                if (response.ok && response.status !== 204) { // 204 = No Content
-                    // Si el form se guardó, cerramos modal y recargamos la página principal
-                    mainModal.hide();
-                    location.reload();
+            .then(response => response.text()) // Obtenemos la respuesta como texto/HTML
+            .then(html => {
+                // Verificamos si la respuesta contiene errores de formulario
+                if (html.includes('errorlist')) {
+                    // Si hay errores, recargamos el contenido del modal para mostrarlos
+                    document.getElementById('modal-content-wrapper').innerHTML = html;
                 } else {
-                    // Si hay errores de validación, el servidor devuelve el form con errores
-                    response.text().then(html => {
-                        modalContentWrapper.innerHTML = html;
-                    });
+                    // Si no hay errores, es la nueva lista de opciones
+                    // Buscamos el nombre del campo (ej. 'categoria') desde el action del form
+                    const fieldName = form.action.split('/').slice(-3, -2)[0].replace('s', '');
+                    
+                    // Actualizamos el contenido del select correspondiente
+                    const selectElement = document.getElementById(`id_${fieldName}`);
+                    if (selectElement) {
+                        selectElement.innerHTML = html;
+                    }
+                    
+                    // Cerramos el modal
+                    bootstrap.Modal.getInstance(document.getElementById('mainModal')).hide();
                 }
             })
             .catch(error => console.error('Error:', error));
             
-            return false; // Prevenimos el envío tradicional del formulario
+            return false; // Prevenimos el envío tradicional
         }
     </script>
 
