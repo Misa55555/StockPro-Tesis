@@ -27,6 +27,7 @@ class Marca(models.Model):
         max_length=100,
         unique=True
     )
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         """Metadatos para el modelo Marca."""
@@ -86,6 +87,7 @@ class Categoria(models.Model):
         'Visible en portal cliente',
         default=True
     )
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         """Metadatos para el modelo Categoria."""
@@ -111,6 +113,7 @@ class Producto(models.Model):
     precio_venta = models.DecimalField('Precio de Venta', max_digits=10, decimal_places=2)
     stock_minimo = models.DecimalField('Stock Mínimo de Alerta', max_digits=10, decimal_places=3, default=5.000)
     es_visible_online = models.BooleanField('Visible en portal cliente', default=True)
+    is_active = models.BooleanField(default=True)
     codigo_barras = models.CharField('Código de Barras', max_length=100, blank=True, null=True, unique=True)
 
     # Relaciones con otros modelos para clasificar el producto.

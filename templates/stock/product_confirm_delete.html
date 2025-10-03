@@ -1,14 +1,14 @@
-{% extends "base.html" %}
-
-{% block title %}Confirmar Eliminación{% endblock %}
-
-{% block content %}
-<h1>Eliminar Producto</h1>
-<p>¿Estás seguro de que quieres eliminar el producto "{{ object.nombre }}"?</p>
-
-<form method="post">
+<div class="modal-header">
+    <h5 class="modal-title">Confirmar Eliminación Permanente</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <p>...</p>
+</div>
+<form method="post" action="{{ request.path }}">
     {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
-    <a href="{% url 'stock_app:product_list' %}" class="btn btn-secondary">Cancelar</a>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-danger">Sí, eliminar permanentemente</button>
+    </div>
 </form>
-{% endblock %}

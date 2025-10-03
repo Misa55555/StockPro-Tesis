@@ -1,4 +1,14 @@
 
+ERRORES
+1. Apartado de app/categoria esta funcionando perfectamente
+Hay que replicar eso mismo en app/marcas
+
+2. AHora hace falta poner la validacion de que cuando un producto este siendo usado por otro que me aparezca
+ALgo "La marca/categoria esta siendo utilizada por un producto bla bla bla"
+
+3. Corroborar que todas las funcionalidades esten andando correctamente 
+
+
 
 Cosas a mejorar (Aseguradas)
 
@@ -9,16 +19,6 @@ o en caso que por ejemplo vendo papas, 3kg de papas, si pongo que cada Kilo lo v
 Osea me explico, como hago para poner esto en la parte de producto y asignarle un precio como tal, osea no puedo poner 1 gramo vale 15 pesos entoncs cuando venda 100 gramos me va a calcular solo, es una idea valida obvio, pero bueno nose, me parece que no va, es mucho calculo tal vez. al igual que con las papas, pongo que vendi 3.5 kg de papas supongamos, pero en el producto no puedo reflejar eso, va nose.
 (Como podemos manejar esto, estos casos)
 
-
-4. El precio de compra, el precio de compra lo asignamos en Añadir producto, me parece que no tiene que estar ahi, me parece que el precio de compra, es en Cargar stock(lote) porque cada vez que tengo un nuevo lote, es donde voy a tener el precio al que lo compre, y en "añadir producto" Solo tendria que tener el precio de venta establecido, entonces a medida que vaya vendiendo y las cosas aumenten poder cambiar ese precio de venta 
-
-
-
-Cosas a mejorar (A definir)
-1. Mandar correo elecronico con su contraseña a los clientes (cambio de contraseña/ actualizacion de contraseña)
-
-1.1 Crear apartados para poder cambiar contraseña (ajustes para el cliente)
-1.2 creacion de API
 
 
 ----

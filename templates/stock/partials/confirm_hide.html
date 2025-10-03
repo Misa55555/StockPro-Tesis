@@ -1,0 +1,19 @@
+<div class="modal-header">
+    <h5 class="modal-title">Confirmar Ocultar</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <p>¿Estás seguro de que quieres ocultar **"{{ object.nombre }}"**?</p>
+    {% if related_objects_count > 0 %}
+    <div class="alert alert-warning">
+        <strong>Atención:</strong> Este ítem está siendo utilizado por <strong>{{ related_objects_count }}</strong> producto(s).
+    </div>
+    {% endif %}
+</div>
+<form method="post" action="{{ request.path }}">
+    {% csrf_token %}
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-danger">Sí, ocultar</button>
+    </div>
+</form>

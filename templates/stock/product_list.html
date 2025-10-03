@@ -1,14 +1,19 @@
 {% extends "base.html" %}
 
+{% block head %}
+    {# Carga los archivos JS/CSS para los widgets de Select2 #}
+    {{ filterset.form.media }}
+{% endblock %}
+
 {% block title %}Gestionar Stock{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Gestión de Catálogo de Productos</h1>
     <div>
-        <a href="{% url 'stock_app:importar_stock_excel' %}" class="btn btn-secondary">Importar desde Excel</a>
-        <a href="{% url 'stock_app:exportar_stock_excel' %}" class="btn btn-info">Exportar a Excel</a>
-        <a href="{% url 'stock_app:cargar_lote' %}" class="btn btn-success">Cargar Stock (Lote)</a>
+        <a href="{% url 'stock_app:importar_stock_excel' %}" class="btn btn-secondary">Importar</a>
+        <a href="{% url 'stock_app:exportar_stock_excel' %}" class="btn btn-info">Exportar</a>
+        <a href="{% url 'stock_app:cargar_lote' %}" class="btn btn-success">Cargar Stock</a>
         <a href="{% url 'stock_app:product_add' %}" class="btn btn-primary">Añadir Producto</a>
     </div>
 </div>
@@ -17,17 +22,23 @@
     <div class="card-body">
         <form method="get">
             <div class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label for="{{ filterset.form.nombre.id_for_label }}" class="form-label fw-bold">Nombre</label>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">{{ filterset.form.nombre.label }}</label>
                     {{ filterset.form.nombre }}
                 </div>
                 <div class="col-md-3">
-                    <label for="{{ filterset.form.marca.id_for_label }}" class="form-label fw-bold">Marca</label>
+                    <label class="form-label fw-bold">{{ filterset.form.marca.label }}</label>
                     {{ filterset.form.marca }}
                 </div>
                 <div class="col-md-3">
-                    <label for="{{ filterset.form.categoria.id_for_label }}" class="form-label fw-bold">Categoría</label>
+                    <label class="form-label fw-bold">{{ filterset.form.categoria.label }}</label>
                     {{ filterset.form.categoria }}
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="mostrar_ocultos" id="mostrarOcultos" {% if mostrar_ocultos %}checked{% endif %} onchange="this.form.submit()">
+                        <label class="form-check-label" for="mostrarOcultos">Ocultos</label>
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">Filtrar</button>
@@ -39,36 +50,41 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <table class="table table-hover">
+        <table class="table table-hover align-middle">
             <thead>
                 <tr>
                     <th>Nombre</th>
                     <th>Marca</th>
                     <th>Categoría</th>
-                    <th>Precio Venta</th>
                     <th>Stock Total</th>
-                    <th>Acciones</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                {% for producto in filterset.qs %} {# Usamos filterset.qs para mostrar los resultados filtrados #}
-                
-                {% with stock_total=producto.get_stock_total %}
-                <tr class="{% if stock_total <= producto.stock_minimo %}table-danger{% endif %}">
-                {% endwith %}
-
+                {% for producto in productos %}
+                <tr class="{% if not producto.is_active %}table-secondary text-muted{% elif producto.get_stock_total <= producto.stock_minimo %}table-danger{% endif %}">
                     <td>{{ producto.nombre }}</td>
                     <td>{{ producto.marca.nombre|default:"N/A" }}</td>
                     <td>{{ producto.categoria.nombre|default:"N/A" }}</td>
-                    <td>${{ producto.precio_venta }}</td>
-                    
-                    {% with stock_total=producto.get_stock_total %}
-                    <td>{{ stock_total|floatformat:"-2" }} {{ producto.unidad_medida.abreviatura }}</td>
-                    {% endwith %}
-
+                    <td>{{ producto.get_stock_total|floatformat:"-2" }} {{ producto.unidad_medida.abreviatura }}</td>
                     <td>
-                        <a href="{% url 'stock_app:product_edit' producto.pk %}" class="btn btn-sm btn-warning">Editar</a>
-                        <a href="{% url 'stock_app:product_delete' producto.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                        {% if producto.is_active %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Oculto</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-warning" onclick="openModal('{% url 'stock_app:product_edit' producto.pk %}')">Editar</button>
+                        
+                        <button class="btn btn-sm btn-danger" onclick="confirmAction('{% url 'stock_app:product_delete' producto.pk %}', '¿Eliminar Producto?', 'Esta acción no se puede deshacer.')">Eliminar</button>
+
+                        {% if producto.is_active %}
+                            <button class="btn btn-sm btn-secondary" onclick="confirmAction('{% url 'stock_app:product_toggle' producto.pk %}', '¿Ocultar Producto?', 'El producto no estará disponible para ventas.')">Ocultar</button>
+                        {% else %}
+                            <a href="{% url 'stock_app:product_toggle' producto.pk %}" class="btn btn-sm btn-success">Restaurar</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

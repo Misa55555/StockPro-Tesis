@@ -7,31 +7,56 @@
         Añadir Marca
     </button>
 </div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="d-flex justify-content-end">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="mostrar_ocultos" id="mostrarOcultos" {% if mostrar_ocultos %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="mostrarOcultos">Mostrar ocultos</label>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card shadow-sm">
     <div class="card-body">
-        <table class="table table-hover">
+        <table class="table table-hover align-middle">
             <thead>
                 <tr>
                     <th>Nombre</th>
+                    <th>Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for marca in marcas %}
-                <tr>
+                <tr class="{% if not marca.is_active %}table-secondary text-muted{% endif %}">
                     <td>{{ marca.nombre }}</td>
+                    <td>
+                        {% if marca.is_active %}
+                            <span class="badge bg-success">Activa</span>
+                        {% else %}
+                            <span class="badge bg-danger">Oculta</span>
+                        {% endif %}
+                    </td>
                     <td class="text-end">
                         <button class="btn btn-sm btn-warning" onclick="openModal('{% url 'stock_app:marca_edit' marca.pk %}')">
                             Editar
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="openModal('{% url 'stock_app:marca_delete' marca.pk %}')">
-                            Eliminar
-                        </button>
-                    </td>
+                        
+                        {% if marca.is_active %}
+                            <button class="btn btn-sm btn-danger" onclick="openModal('{% url 'stock_app:marca_toggle' marca.pk %}')">
+                                Ocultar
+                            </button>
+                        {% else %}
+                            <a href="{% url 'stock_app:marca_toggle' marca.pk %}" class="btn btn-sm btn-success">Restaurar</a>
+                        {% endif %}
+                        </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="2" class="text-center">No hay marcas cargadas.</td>
+                    <td colspan="3" class="text-center">No hay marcas para mostrar.</td>
                 </tr>
                 {% endfor %}
             </tbody>

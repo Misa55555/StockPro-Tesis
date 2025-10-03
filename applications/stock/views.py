@@ -11,25 +11,38 @@ from .models import Producto, Categoria, Marca, UnidadMedida, Lote
 from .forms import ProductoForm, CategoriaForm, MarcaForm, LoteForm, UploadFileForm
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect # Añade get_object_or_404 y redirect
+
 
 
 # --- Vistas de Producto ---
 class ProductListView(ListView):
     model = Producto
     template_name = "stock/product_list.html"
-    context_object_name = 'productos'
-    
-    # --- INICIO DE LA LÓGICA DE FILTROS ---
+    context_object_name = 'productos' # Mantenemos esto por compatibilidad
+
     def get_queryset(self):
         queryset = super().get_queryset()
+        
+        # Lógica para mostrar/ocultar productos inactivos
+        mostrar_ocultos = self.request.GET.get('mostrar_ocultos')
+        if mostrar_ocultos:
+            queryset = queryset.filter(is_active=False)
+        else:
+            queryset = queryset.filter(is_active=True)
+            
+        # Creamos el filterset con el queryset ya pre-filtrado por estado
         self.filterset = ProductFilter(self.request.GET, queryset=queryset)
         return self.filterset.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Pasamos el filterset completo a la plantilla
         context["filterset"] = self.filterset
+        context["mostrar_ocultos"] = self.request.GET.get('mostrar_ocultos')
+        # Pasamos la lista filtrada de productos a la variable 'productos'
+        context['productos'] = self.get_queryset()
         return context
-    # --- FIN DE LA LÓGICA DE FILTROS ---
 
 class ProductCreateView(CreateView):
     model = Producto
@@ -43,11 +56,13 @@ class ProductUpdateView(UpdateView):
     template_name = "stock/product_form.html"
     success_url = reverse_lazy('stock_app:product_list')
 
-class ProductDeleteView(DeleteView):
-    model = Producto
-    template_name = "stock/product_confirm_delete.html"
-    success_url = reverse_lazy('stock_app:product_list')
+def product_delete_modal(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    producto.delete()
+    messages.success(request, f'El producto "{producto.nombre}" ha sido eliminado permanentemente.')
+    return redirect('stock_app:product_list')
 
+# --- FIN DE LA CORRECCIÓN ---
 
 # --- Vistas de Categoría ---
 class CategoryListView(ListView):
@@ -55,18 +70,22 @@ class CategoryListView(ListView):
     template_name = "stock/category_list.html"
     context_object_name = 'categorias'
 
+    def get_queryset(self):
+        if self.request.GET.get('mostrar_ocultos'):
+            return Categoria.objects.filter(is_active=False)
+        return Categoria.objects.filter(is_active=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["mostrar_ocultos"] = self.request.GET.get('mostrar_ocultos')
+        return context
+
 class CategoryCreateView(CreateView):
     model = Categoria
     form_class = CategoriaForm
     template_name = "stock/partials/category_form.html"
+    # Simplemente redirigimos a la lista al tener éxito
     success_url = reverse_lazy('stock_app:category_list')
-
-    def form_valid(self, form):
-        form.save()
-        # Preparamos el contexto con todas las categorías
-        context = {'categorias': Categoria.objects.all()}
-        # Renderizamos solo el parcial con las opciones
-        return render(self.request, 'stock/partials/category_options.html', context)
 
 
 class CategoryUpdateView(UpdateView):
@@ -85,6 +104,16 @@ class MarcaListView(ListView):
     model = Marca
     template_name = "stock/marca_list.html"
     context_object_name = 'marcas'
+
+    def get_queryset(self):
+        if self.request.GET.get('mostrar_ocultos'):
+            return Marca.objects.filter(is_active=False)
+        return Marca.objects.filter(is_active=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["mostrar_ocultos"] = self.request.GET.get('mostrar_ocultos')
+        return context
 
 class MarcaCreateView(CreateView):
     model = Marca
@@ -176,3 +205,25 @@ def exportar_stock_excel(request):
     response['Content-Disposition'] = 'attachment; filename="reporte_stock.xlsx"'
     workbook.save(response)
     return response
+
+
+def toggle_product_status(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    producto.is_active = not producto.is_active
+    producto.save()
+    messages.info(request, f'El estado del producto "{producto.nombre}" ha sido actualizado.')
+    return redirect('stock_app:product_list')
+
+def toggle_category_status(request, pk):
+    categoria = get_object_or_404(Categoria, pk=pk)
+    categoria.is_active = not categoria.is_active
+    categoria.save()
+    messages.info(request, f'El estado de la categoría "{categoria.nombre}" ha sido actualizado.')
+    return redirect('stock_app:category_list')
+
+def toggle_marca_status(request, pk):
+    marca = get_object_or_404(Marca, pk=pk)
+    marca.is_active = not marca.is_active
+    marca.save()
+    messages.info(request, f'El estado de la marca "{marca.nombre}" ha sido actualizado.')
+    return redirect('stock_app:marca_list')
