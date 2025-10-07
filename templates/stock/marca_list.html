@@ -46,13 +46,14 @@
                         </button>
                         
                         {% if marca.is_active %}
-                            <button class="btn btn-sm btn-danger" onclick="openModal('{% url 'stock_app:marca_toggle' marca.pk %}')">
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="confirmAction('{% url 'stock_app:marca_toggle' marca.pk %}', '¿Ocultar Marca?', 'La marca no estará disponible para nuevos productos.', 'Sí, ocultar')">
                                 Ocultar
                             </button>
                         {% else %}
                             <a href="{% url 'stock_app:marca_toggle' marca.pk %}" class="btn btn-sm btn-success">Restaurar</a>
                         {% endif %}
-                        </td>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
