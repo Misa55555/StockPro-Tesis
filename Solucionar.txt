@@ -1,23 +1,14 @@
 
 ERRORES
-1. Apartado de app/categoria esta funcionando perfectamente
-Hay que replicar eso mismo en app/marcas
 
-2. AHora hace falta poner la validacion de que cuando un producto este siendo usado por otro que me aparezca
-ALgo "La marca/categoria esta siendo utilizada por un producto bla bla bla"
+2. Editar un producto no se esta viendo como deberia verse, lo que hace es como abrir una nueva pestaña, es medio raro,creo que eso va como PopUp?
 
-3. Corroborar que todas las funcionalidades esten andando correctamente 
 
 
 
 Cosas a mejorar (Aseguradas)
 
 
-3. Que pasa cuando quiero vender algo por gramos o por kilo? por ejemplo vendo fiambre, los 100 gramos los vendo 1150 pesos
-Necesito tener esto presente, que si es por Gramo de esa forma 
-o en caso que por ejemplo vendo papas, 3kg de papas, si pongo que cada Kilo lo vendo por 800 pero que pasa si quiero vender 3.5kg de papas 
-Osea me explico, como hago para poner esto en la parte de producto y asignarle un precio como tal, osea no puedo poner 1 gramo vale 15 pesos entoncs cuando venda 100 gramos me va a calcular solo, es una idea valida obvio, pero bueno nose, me parece que no va, es mucho calculo tal vez. al igual que con las papas, pongo que vendi 3.5 kg de papas supongamos, pero en el producto no puedo reflejar eso, va nose.
-(Como podemos manejar esto, estos casos)
 
 
 
@@ -25,3 +16,4 @@ Osea me explico, como hago para poner esto en la parte de producto y asignarle u
 
 Sujerencias Truccone:
 1. Si quiero aumentar el precio a X categorias o X marca o a X producto en especifico, estaria bueno tener ese apartado para poder aumentarle el precio de venta
+* DESCARTADO

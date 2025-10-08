@@ -4,10 +4,10 @@
     {{ form.media }}
 {% endblock %}
 
-{% block title %}{% if object %}Editar Producto{% else %}Añadir Producto{% endif %}{% endblock %}
+{% block title %}{% if object %}Editar Producto{% else %}Añadir Producto al Catálogo{% endif %}{% endblock %}
 
 {% block content %}
-<h1>{% if object %}Editar Producto{% else %}Añadir Nuevo Producto{% endif %}</h1>
+<h1>{% if object %}Editar Producto{% else %}Añadir Nuevo Producto al Catálogo{% endif %}</h1>
 
 <div class="card shadow-sm mt-4">
     <div class="card-body">
@@ -28,25 +28,20 @@
                     <div class="mb-3">
                         <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
                         
-                        {% if field.name == 'categoria' %}
-                            <div class="input-group">
-                                {{ field }}
+                        <div class="input-group">
+                            {{ field }}
+                            {% if field.name == 'categoria' %}
                                 <button class="btn btn-outline-primary" type="button" 
                                         onclick="openModal('{% url 'stock_app:category_add' %}')">
                                     +
                                 </button>
-                            </div>
-                        {% elif field.name == 'marca' %}
-                            <div class="input-group">
-                                {{ field }}
+                            {% elif field.name == 'marca' %}
                                 <button class="btn btn-outline-primary" type="button" 
                                         onclick="openModal('{% url 'stock_app:marca_add' %}')">
                                     +
                                 </button>
-                            </div>
-                        {% else %}
-                            {{ field }}
-                        {% endif %}
+                            {% endif %}
+                        </div>
 
                         {% if field.help_text %}
                         <div class="form-text">{{ field.help_text }}</div>
@@ -54,7 +49,7 @@
                     </div>
                 {% endif %}
             {% endfor %}
-
+            
             <div class="mt-4">
                 <button type="submit" class="btn btn-success">Guardar</button>
                 <a href="{% url 'stock_app:product_list' %}" class="btn btn-secondary">Cancelar</a>

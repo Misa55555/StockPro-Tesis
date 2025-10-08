@@ -76,16 +76,16 @@
                         {% endif %}
                     </td>
                     <td class="text-end">
-                        <button class="btn btn-sm btn-warning" onclick="openModal('{% url 'stock_app:product_edit' producto.pk %}')">Editar</button>
+                        <button type="button" class="btn btn-sm btn-warning" onclick="openModal('{% url 'stock_app:product_edit' producto.pk %}')">Editar</button>
                         
-                        <button class="btn btn-sm btn-danger" onclick="confirmAction('{% url 'stock_app:product_delete' producto.pk %}', '¿Eliminar Producto?', 'Esta acción no se puede deshacer.')">Eliminar</button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="confirmAction('{% url 'stock_app:product_delete' producto.pk %}', '¿Eliminar Producto?', 'Esta acción no se puede deshacer.')">Eliminar</button>
 
                         {% if producto.is_active %}
-                            <button class="btn btn-sm btn-secondary" onclick="confirmAction('{% url 'stock_app:product_toggle' producto.pk %}', '¿Ocultar Producto?', 'El producto no estará disponible para ventas.')">Ocultar</button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="confirmAction('{% url 'stock_app:product_toggle' producto.pk %}', '¿Ocultar Producto?', 'El producto no estará disponible para ventas.')">Ocultar</button>
                         {% else %}
                             <a href="{% url 'stock_app:product_toggle' producto.pk %}" class="btn btn-sm btn-success">Restaurar</a>
                         {% endif %}
-                    </td>
+                        </td>
                 </tr>
                 {% empty %}
                 <tr>

@@ -53,7 +53,8 @@ class ProductCreateView(CreateView):
 class ProductUpdateView(UpdateView):
     model = Producto
     form_class = ProductoForm
-    template_name = "stock/product_form.html"
+    # --- CAMBIO: Apuntamos a la nueva plantilla parcial ---
+    template_name = "stock/partials/product_form_modal.html"
     success_url = reverse_lazy('stock_app:product_list')
 
 def product_delete_modal(request, pk):
