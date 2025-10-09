@@ -14,38 +14,28 @@ class ProductoForm(forms.ModelForm):
         required=False,
         help_text="Busca un producto para ver si ya existe antes de crear uno nuevo."
     )
-    categoria = forms.ModelChoiceField(
-        queryset=Categoria.objects.filter(is_active=True),
-        widget=Select2Widget,
-        label="Categoría"
-    )
-    marca = forms.ModelChoiceField(
-        queryset=Marca.objects.filter(is_active=True),
-        widget=Select2Widget,
-        required=False,
-        label="Marca"
-    )
-    unidad_medida = forms.ModelChoiceField(
-        queryset=UnidadMedida.objects.all(),
-        widget=Select2Widget,
-        label="Unidad de Medida"
-    )
 
     class Meta:
         model = Producto
-        # En 'fields' solo van los campos que NO definimos arriba
+        # Ahora incluimos todos los campos en 'fields'
         fields = [
             'nombre',
             'descripcion',
+            'categoria',
+            'marca',
+            'unidad_medida',
             'precio_venta',
             'stock_minimo',
             'codigo_barras',
             'es_visible_online',
         ]
-        # En 'widgets' solo van los widgets para los campos listados en 'fields'
+        # En 'widgets' van los widgets para TODOS los campos
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'categoria': Select2Widget,
+            'marca': Select2Widget,
+            'unidad_medida': Select2Widget,
             'precio_venta': forms.NumberInput(attrs={'class': 'form-control'}),
             'stock_minimo': forms.NumberInput(attrs={'class': 'form-control'}),
             'codigo_barras': forms.TextInput(attrs={'class': 'form-control'}),

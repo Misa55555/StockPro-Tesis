@@ -83,6 +83,25 @@
                 .then(html => {
                     modalContentWrapper.innerHTML = html;
                     mainModal.show();
+
+                    // Pequeño retraso para asegurar que el DOM esté listo, luego inicializar Select2
+                    setTimeout(() => {
+                        // Inicializar todos los selects que contengan los nombres de campos específicos
+                        $(modalContentWrapper).find('select').each(function() {
+                            var fieldName = $(this).attr('name') || '';
+                            if (fieldName && (fieldName.includes('categoria') || fieldName.includes('marca') || fieldName.includes('unidad_medida'))) {
+                                if (!$(this).hasClass('select2-hidden-accessible')) {
+                                    $(this).select2({
+                                        width: '100%',
+                                        placeholder: 'Seleccionar...',
+                                        allowClear: true,
+                                        dropdownParent: $(modalContentWrapper)
+                                    });
+                                    console.log('Select2 inicializado para:', fieldName, 'con', $(this).find('option').length, 'opciones');
+                                }
+                            }
+                        });
+                    }, 100);
                 });
         }
 
@@ -93,7 +112,28 @@
                     mainModal.hide();
                     location.reload();
                 } else {
-                    response.text().then(html => modalContentWrapper.innerHTML = html);
+                    response.text().then(html => {
+                        modalContentWrapper.innerHTML = html;
+
+                        // Pequeño retraso para asegurar que el DOM esté listo, luego inicializar Select2
+                        setTimeout(() => {
+                            // Inicializar todos los selects que contengan los nombres de campos específicos
+                            $(modalContentWrapper).find('select').each(function() {
+                                var fieldName = $(this).attr('name') || '';
+                                if (fieldName && (fieldName.includes('categoria') || fieldName.includes('marca') || fieldName.includes('unidad_medida'))) {
+                                    if (!$(this).hasClass('select2-hidden-accessible')) {
+                                        $(this).select2({
+                                            width: '100%',
+                                            placeholder: 'Seleccionar...',
+                                            allowClear: true,
+                                            dropdownParent: $(modalContentWrapper)
+                                        });
+                                        console.log('Select2 inicializado para:', fieldName, 'con', $(this).find('option').length, 'opciones');
+                                    }
+                                }
+                            });
+                        }, 100);
+                    });
                 }
             }).catch(error => console.error('Error:', error));
             return false;

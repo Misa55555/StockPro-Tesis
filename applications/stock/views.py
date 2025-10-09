@@ -57,6 +57,14 @@ class ProductUpdateView(UpdateView):
     template_name = "stock/partials/product_form_modal.html"
     success_url = reverse_lazy('stock_app:product_list')
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Personalizamos los querysets después de crear el formulario
+        form.fields['categoria'].queryset = Categoria.objects.filter(is_active=True)
+        form.fields['marca'].queryset = Marca.objects.filter(is_active=True)
+        # unidad_medida no necesita filtro especial
+        return form
+
 def product_delete_modal(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
     producto.delete()
