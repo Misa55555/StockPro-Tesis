@@ -41,6 +41,11 @@ class ProductoForm(forms.ModelForm):
             'codigo_barras': forms.TextInput(attrs={'class': 'form-control'}),
             'es_visible_online': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    def clean_precio_venta(self):
+        precio_venta = self.cleaned_data.get('precio_venta')
+        if precio_venta is not None and precio_venta <= 0:
+            raise ValidationError("El precio de venta debe ser un valor mayor que cero.")
+        return precio_venta
 
 class CategoriaForm(forms.ModelForm):
     class Meta:
