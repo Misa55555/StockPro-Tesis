@@ -1,0 +1,13 @@
+
+# Aquí definimos todos nuestros contenedores/servicios
+services:
+  # El primer servicio: nuestra aplicación Django. Le llamamos 'web'.
+  web:
+    # Instrucción para construir la imagen
+    build: .
+    # Mapeo de puertos "HOST:CONTENEDOR"
+    ports:
+      - "8000:8000"
+    # Mapeo de volúmenes "HOST:CONTENEDOR"
+    volumes:
+      - .:/app

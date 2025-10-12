@@ -1,0 +1,18 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+Dockerfile
+
+# Entorno virtual de Python
+venv/
+*.pyc
+
+# Base de datos local y archivos de configuración sensibles
+db.sqlite3
+.env
+
+# Carpetas de caché de Django y otros
+__pycache__/
