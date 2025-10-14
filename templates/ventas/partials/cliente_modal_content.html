@@ -1,0 +1,15 @@
+<div class="modal-header">
+    <h5 class="modal-title">Asignar o Crear Cliente</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <div class="mb-3">
+        <label for="customer-search-select" class="form-label">Buscar cliente existente</label>
+        <select id="customer-search-select" class="form-control" style="width: 100%;"></select>
+    </div>
+    <hr>
+    <h5>O crear uno nuevo:</h5>
+    <div id="create-customer-form-container">
+        {% include 'ventas/partials/cliente_form.html' %}
+    </div>
+</div>

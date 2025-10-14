@@ -1,0 +1,24 @@
+<form id="create-customer-form" action="{% url 'ventas_app:crear_cliente_modal' %}" method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_nombre_completo" class="form-label">Nombre Completo</label>
+        {{ form.nombre_completo }}
+        {% if form.nombre_completo.errors %}<div class="text-danger small">{{ form.nombre_completo.errors.as_text }}</div>{% endif %}
+    </div>
+    <div class="mb-3">
+        <label for="id_dni" class="form-label">DNI</label>
+        {{ form.dni }}
+        {% if form.dni.errors %}<div class="text-danger small">{{ form.dni.errors.as_text }}</div>{% endif %}
+    </div>
+    <div class="mb-3">
+        <label for="id_telefono" class="form-label">Teléfono</label>
+        {{ form.telefono }}
+        {% if form.telefono.errors %}<div class="text-danger small">{{ form.telefono.errors.as_text }}</div>{% endif %}
+    </div>
+    <div class="mb-3">
+        <label for="id_email" class="form-label">Email (Opcional)</label>
+        {{ form.email }}
+        {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors.as_text }}</div>{% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+</form>
