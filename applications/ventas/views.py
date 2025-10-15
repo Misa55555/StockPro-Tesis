@@ -17,13 +17,23 @@ from applications.usuarios.forms import ClienteForm
 from applications.usuarios.models import Cliente
 from .models import MetodoPago, Venta, DetalleVenta
 
+# applications/ventas/views.py
+
+# ... (todas las importaciones se quedan como están) ...
+
 class POSView(LoginRequiredMixin, ListView):
-    # ... (esta clase no tiene cambios) ...
     template_name = "ventas/pos.html"
     context_object_name = 'productos'
 
     def get_queryset(self):
-        productos = Producto.objects.filter(is_active=True, es_visible_online=True).annotate(
+        """
+        Este método le dice a la ListView qué objetos listar.
+        Es el que te estaba faltando.
+        """
+        productos = Producto.objects.filter(
+            is_active=True, 
+            es_visible_online=True
+        ).annotate(
             stock_total=Coalesce(
                 Sum('lotes__cantidad_actual', filter=models.Q(lotes__cantidad_actual__gt=0)),
                 0,
@@ -33,12 +43,17 @@ class POSView(LoginRequiredMixin, ListView):
         return productos
 
     def get_context_data(self, **kwargs):
+        """
+        Este método añade datos extra (como los métodos de pago) a la plantilla.
+        """
         context = super().get_context_data(**kwargs)
         context['metodos_pago'] = MetodoPago.objects.filter(is_active=True)
         return context
 
     def post(self, request, *args, **kwargs):
-        # ... (este método no tiene cambios) ...
+        """
+        Este método maneja la lógica cuando se presiona "PAGAR / COBRAR".
+        """
         data = json.loads(request.body)
         items = data.get('items', {})
 
@@ -100,7 +115,11 @@ class POSView(LoginRequiredMixin, ListView):
                         precio_compra_momento=precio_compra_promedio,
                     )
             
-            return JsonResponse({'status': 'success', 'message': f'Venta #{venta.id} registrada exitosamente.'})
+            modal_html = render_to_string(
+                'ventas/partials/ticket_modal.html',
+                {'venta': venta}
+            )
+            return JsonResponse({'status': 'success', 'modal_html': modal_html})
 
         except (Producto.DoesNotExist, MetodoPago.DoesNotExist, Cliente.DoesNotExist):
             return JsonResponse({'status': 'error', 'message': 'Uno de los componentes de la venta no fue encontrado.'}, status=400)
@@ -108,7 +127,6 @@ class POSView(LoginRequiredMixin, ListView):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': f'Ocurrió un error inesperado: {str(e)}'}, status=500)
-
 
 def buscar_clientes(request):
     term = request.GET.get('term', '')

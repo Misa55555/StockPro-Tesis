@@ -104,7 +104,6 @@
     }
     const csrftoken = getCookie('csrftoken');
 
-
     document.addEventListener('DOMContentLoaded', function () {
         // --- 1. REFERENCIAS A ELEMENTOS DEL DOM ---
         const productSearchInput = document.getElementById('product-search-input');
@@ -119,7 +118,7 @@
         const modalContentWrapper = document.getElementById('modal-content-wrapper');
         const ticketCustomerName = document.getElementById('ticket-customer-name');
 
-        // --- 2. ESTADO DEL TICKET (NUESTRO "CEREBRO") ---
+        // --- 2. ESTADO DEL TICKET ---
         let posTicket = {
             items: {},
             total: 0,
@@ -134,7 +133,7 @@
             const currentQuantity = posTicket.items[product.id] ? posTicket.items[product.id].quantity : 0;
 
             if (currentQuantity >= stock) {
-                alert(`No hay más stock disponible para "${product.name}".`);
+                Swal.fire({ icon: 'warning', title: 'Stock Agotado', text: `No hay más stock disponible para "${product.name}".`});
                 return;
             }
 
@@ -159,7 +158,7 @@
             const newQuantity = item.quantity + change;
 
             if (newQuantity > item.stock) {
-                alert(`No se puede vender más que el stock disponible (${item.stock}).`);
+                Swal.fire({ icon: 'warning', title: 'Límite de Stock', text: `No se puede vender más que el stock disponible (${item.stock}).`});
                 return;
             }
 
@@ -172,19 +171,12 @@
         }
 
         function renderTicket() {
-            if (Object.keys(posTicket.items).length === 0) {
-                ticketItemsContainer.innerHTML = '<p class="text-center text-muted">Añada productos al ticket</p>';
-            } else {
-                ticketItemsContainer.innerHTML = '';
-            }
-            
+            ticketItemsContainer.innerHTML = Object.keys(posTicket.items).length === 0 ? '<p class="text-center text-muted">Añada productos al ticket</p>' : '';
             let newTotal = 0;
-
             for (const productId in posTicket.items) {
                 const item = posTicket.items[productId];
                 const subtotal = item.quantity * item.price;
                 newTotal += subtotal;
-
                 const itemHTML = `
                     <div class="ticket-item mb-2" data-product-id="${item.id}">
                         <div class="font-weight-bold">${item.name}</div>
@@ -197,34 +189,39 @@
                             </div>
                             <div class="font-weight-bold">$${subtotal.toFixed(2)}</div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 ticketItemsContainer.innerHTML += itemHTML;
             }
-            
             posTicket.total = newTotal;
             ticketTotalAmount.textContent = `$${newTotal.toFixed(2)}`;
         }
 
         function selectClient(cliente) {
             posTicket.clienteId = cliente.id;
-            ticketCustomerName.textContent = cliente.text.split(' - ')[0]; // Mostramos solo el nombre
+            ticketCustomerName.textContent = cliente.text.split(' - ')[0];
             mainModal.hide();
+        }
+
+        function printTicket() {
+            const ticketToPrint = document.getElementById('ticket-to-print');
+            if (ticketToPrint) {
+                const originalPage = document.body.innerHTML;
+                const printContent = ticketToPrint.innerHTML;
+                document.body.innerHTML = `<div class="container p-4">${printContent}</div>`;
+                window.print();
+                document.body.innerHTML = originalPage;
+                window.location.reload();
+            }
         }
 
         // --- 4. EVENT LISTENERS ---
 
         productSearchInput.addEventListener('keyup', function() {
-            const searchTerm = productSearchInput.value.toLowerCase();
+            const searchTerm = this.value.toLowerCase();
             allProductItems.forEach(item => {
                 const productName = item.dataset.productName.toLowerCase();
                 const productBarcode = item.dataset.productBarcode.toLowerCase();
-                
-                if (productName.includes(searchTerm) || productBarcode.includes(searchTerm)) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
+                item.style.display = (productName.includes(searchTerm) || productBarcode.includes(searchTerm)) ? 'block' : 'none';
             });
         });
 
@@ -232,6 +229,7 @@
             const productItem = event.target.closest('.product-item');
             if (productItem) {
                 event.preventDefault();
+                // --- CORRECCIÓN CLAVE: Mapeamos los nombres correctos ---
                 const product = {
                     id: productItem.dataset.productId,
                     name: productItem.dataset.productName,
@@ -265,15 +263,13 @@
                             url: "{% url 'ventas_app:buscar_clientes' %}",
                             dataType: 'json',
                             delay: 250,
-                            data: function (params) { return { term: params.term }; },
-                            processResults: function (data) { return { results: data }; }
+                            data: params => ({ term: params.term }),
+                            processResults: data => ({ results: data })
                         }
-                    }).on('select2:select', function (e) {
-                        selectClient(e.params.data);
-                    });
+                    }).on('select2:select', e => selectClient(e.params.data));
 
                     modalContentWrapper.addEventListener('submit', function(e) {
-                        if (e.target.id === 'create-customer-form') {
+                        if (e.target && e.target.id === 'create-customer-form') {
                             e.preventDefault();
                             fetch(e.target.action, {
                                 method: 'POST',
@@ -297,11 +293,11 @@
             posTicket.metodoPagoId = document.getElementById('payment-method-select').value;
             
             if (Object.keys(posTicket.items).length === 0) {
-                alert("El ticket está vacío.");
+                Swal.fire({icon: 'error', title: 'Ticket Vacío', text: 'Añada productos antes de cobrar.'});
                 return;
             }
             if (!posTicket.metodoPagoId) {
-                alert("Por favor, selecciona un método de pago.");
+                Swal.fire({icon: 'error', title: 'Falta Método de Pago', text: 'Por favor, selecciona un método de pago.'});
                 return;
             }
             payButton.disabled = true;
@@ -309,26 +305,27 @@
 
             fetch("{% url 'ventas_app:pos' %}", {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
                 body: JSON.stringify(posTicket)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    alert(data.message);
-                    window.location.reload();
+                    modalContentWrapper.innerHTML = data.modal_html;
+                    mainModal.show();
+                    
+                    document.getElementById('new-sale-btn').addEventListener('click', () => window.location.reload());
+                    document.getElementById('print-ticket-btn').addEventListener('click', printTicket);
+
                 } else {
-                    alert('Error: ' + data.message);
+                    Swal.fire({ icon: 'error', title: 'Error en la Venta', text: data.message });
                     payButton.disabled = false;
                     payButton.textContent = 'PAGAR / COBRAR';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ha ocurrido un error inesperado al procesar la venta.');
+                Swal.fire({ icon: 'error', title: 'Error Inesperado', text: 'No se pudo procesar la venta. Revisa la consola.' });
                 payButton.disabled = false;
                 payButton.textContent = 'PAGAR / COBRAR';
             });
