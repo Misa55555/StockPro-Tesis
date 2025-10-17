@@ -30,6 +30,14 @@ class Venta(models.Model):
     vendedor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='ventas')
     cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
 
+    cierre = models.ForeignKey(
+        'cierres.CierreCaja',  # <--- Cambio clave
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='ventas_incluidas'
+    )
+    
     class Meta:
         verbose_name = 'Venta'
         verbose_name_plural = 'Ventas'

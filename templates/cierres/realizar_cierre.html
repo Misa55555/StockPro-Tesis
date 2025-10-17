@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Realizar Cierre de Caja{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Realizar Cierre de Caja</h1>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Resumen del Sistema</h6>
+                </div>
+                <div class="card-body">
+                    <p>Ventas realizadas desde el último cierre.</p>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Cantidad de Tickets:</span>
+                        <span class="font-weight-bold">{{ cantidad_tickets }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5>Total Esperado:</h5>
+                        <h5 class="font-weight-bold text-success">${{ total_sistema|floatformat:2 }}</h5>
+                    </div>
+                    <hr>
+                    <h6 class="mt-4">Desglose por Método de Pago:</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for item in desglose_por_metodo %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ item.metodo_pago__nombre }}
+                            <span>${{ item.subtotal|floatformat:2 }}</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item">No hay ventas para cerrar.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">Arqueo de Caja</h6>
+                </div>
+                <div class="card-body">
+                    <p>Ingresa los montos contados para cada método de pago.</p>
+                    <form method="POST">
+                        {% csrf_token %}
+                        {% for item in desglose_por_metodo %}
+                        <div class="mb-3">
+                            <label for="monto_{{ item.metodo_pago__id }}" class="form-label"><b>{{ item.metodo_pago__nombre }}</b> (Sistema: ${{ item.subtotal|floatformat:2 }})</label>
+                            <input type="number" step="0.01" class="form-control" name="monto_{{ item.metodo_pago__id }}" id="monto_{{ item.metodo_pago__id }}" required>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones (Opcional)</label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+                        </div>
+
+                        {% if cantidad_tickets > 0 %}
+                            <button type="submit" class="btn btn-primary btn-block">Finalizar y Cerrar Caja</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary btn-block" disabled>No hay ventas para cerrar</button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
