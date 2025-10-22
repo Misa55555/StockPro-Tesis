@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
-
-{% block title %}Realizar Cierre de Caja{% endblock title %}
+{% load l10n %} {% block title %}Realizar Cierre de Caja{% endblock title %}
 
 {% block content %}
 <div class="container">
@@ -70,5 +69,99 @@
             </div>
         </div>
     </div>
-</div>
+    <hr class="my-4">
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <h2 class="mb-3">Historial de Cierres de Caja</h2>
+            
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="historialCierres" width="100%" cellspacing="0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Fecha y Hora</th>
+                                    <th>Usuario</th>
+                                    <th>Total Sistema</th>
+                                    <th>Total Arqueo</th>
+                                    <th>Diferencia</th>
+                                    <th>Detalles</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cierre in historial_cierres %}
+                                <tr>
+                                    <td>#{{ cierre.id }}</td>
+                                    <td>{{ cierre.fecha_cierre|date:"d/m/Y H:i" }} hs</td>
+                                    <td>{{ cierre.usuario.username|default:"N/A" }}</td>
+                                    <td>${{ cierre.total_sistema|floatformat:2 }}</td>
+                                    <td>${{ cierre.total_arqueo|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="font-weight-bold {% if cierre.diferencia > 0 %}text-success{% elif cierre.diferencia < 0 %}text-danger{% endif %}">
+                                            ${{ cierre.diferencia|floatformat:"+2" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ cierre.id }}" aria-expanded="false" aria-controls="collapse-{{ cierre.id }}">
+                                            Ver Detalles
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="7" class="p-0">
+                                        <div class="collapse" id="collapse-{{ cierre.id }}">
+                                            <div class="p-3 bg-light border-top">
+                                                <h5>Detalle del Cierre #{{ cierre.id }}</h5>
+                                                
+                                                <h6>Desglose por Método de Pago:</h6>
+                                                <table class="table table-sm table-striped table-bordered mt-2">
+                                                    <thead class="thead-dark">
+                                                        <tr>
+                                                            <th>Método de Pago</th>
+                                                            <th>Monto Sistema</th>
+                                                            <th>Monto Arqueo</th>
+                                                            <th>Diferencia</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for detalle in cierre.detalles.all %}
+                                                        <tr>
+                                                            <td>{{ detalle.metodo_pago.nombre }}</td>
+                                                            <td>${{ detalle.monto_sistema|floatformat:2 }}</td>
+                                                            <td>${{ detalle.monto_arqueo|floatformat:2 }}</td>
+                                                            <td>
+                                                                <span class="{% if detalle.diferencia > 0 %}text-success{% elif detalle.diferencia < 0 %}text-danger{% endif %}">
+                                                                    ${{ detalle.diferencia|floatformat:"+2" }}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                                
+                                                <h6 class="mt-3">Observaciones:</h6>
+                                                <p class="mb-0">
+                                                    {{ cierre.observaciones|default:"Sin observaciones."|linebreaksbr }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        No hay cierres de caja en el historial.
+                                    </td>
+                                </tr>
+                                {% endfor %} </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
 {% endblock content %}
