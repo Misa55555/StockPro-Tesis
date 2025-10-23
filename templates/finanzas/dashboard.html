@@ -19,82 +19,31 @@
                 <input type="date" id="endDate" class="form-control form-control-sm" value="{{ fecha_hoy|date:'Y-m-d' }}">
             </div>
             <button id="filterButton" class="btn btn-primary btn-sm align-self-end me-2">Filtrar</button>
+            
+            <a href="#" id="exportExcelButton" class="btn btn-outline-success btn-sm align-self-end me-2" title="Descargar Reporte en Excel">
+                <i class="fas fa-file-excel"></i>
+            </a>
             <button type="button" class="btn btn-success btn-sm align-self-end" data-bs-toggle="modal" data-bs-target="#gastoModal">
-                <i class="fas fa-plus"></i> Registrar Gasto
+                <i class="fas fa-plus"></i> Gasto
             </button>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4"><div class="card border-left-success shadow h-100 py-2"><div class="card-body"><div class="row no-gutters align-items-center"><div class="col mr-2"><div class="text-xs font-weight-bold text-success text-uppercase mb-1">Beneficio Neto</div><div id="kpi-beneficio-neto" class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div></div><div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div></div></div></div></div>
+    <div class="row"><div class="col-xl-3 col-md-6 mb-4"><div class="card border-left-success shadow h-100 py-2"><div class="card-body"><div class="row no-gutters align-items-center"><div class="col mr-2"><div class="text-xs font-weight-bold text-success text-uppercase mb-1">Beneficio Neto</div><div id="kpi-beneficio-neto" class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div></div><div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div></div></div></div></div>
         <div class="col-xl-3 col-md-6 mb-4"><div class="card border-left-primary shadow h-100 py-2"><div class="card-body"><div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Ingresos Brutos</div><div id="kpi-ingresos" class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div></div></div></div>
         <div class="col-xl-3 col-md-6 mb-4"><div class="card border-left-info shadow h-100 py-2"><div class="card-body"><div class="text-xs font-weight-bold text-info text-uppercase mb-1">Ganancia Bruta (Margen)</div><div id="kpi-ganancia-bruta" class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div></div></div></div>
         <div class="col-xl-3 col-md-6 mb-4"><div class="card border-left-danger shadow h-100 py-2"><div class="card-body"><div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Gastos Operativos</div><div id="kpi-gastos" class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div></div></div></div>
     </div>
-
-    <div class="row">
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Evolución de Ingresos vs Gastos</h6></div>
-                <div class="card-body"><div class="chart-area"><canvas id="evolucionChart"></canvas></div></div>
-            </div>
-        </div>
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Gastos por Categoría</h6></div>
-                <div class="card-body"><div class="chart-pie pt-4"><canvas id="gastosChart"></canvas></div></div>
-            </div>
-        </div>
+    <div class="row"><div class="col-xl-8 col-lg-7"><div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Evolución de Ingresos vs Gastos</h6></div><div class="card-body"><div class="chart-area"><canvas id="evolucionChart"></canvas></div></div></div></div>
+        <div class="col-xl-4 col-lg-5"><div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Gastos por Categoría</h6></div><div class="card-body"><div class="chart-pie pt-4"><canvas id="gastosChart"></canvas></div></div></div></div>
     </div>
-    
-    <div class="row">
-        <div class="col-xl-4 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Top 5 Productos (Más Vendidos)</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-bar" style="height: 250px;">
-                        <canvas id="topProductosVentaChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-4 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-success">Top 5 Productos (Más Rentables)</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-bar" style="height: 250px;">
-                        <canvas id="topProductosRentablesChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-4 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-info">Ventas por Vendedor</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-bar" style="height: 250px;">
-                        <canvas id="ventasPorVendedorChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="row"><div class="col-xl-4 col-lg-6"><div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Top 5 Productos (Más Vendidos)</h6></div><div class="card-body"><div class="chart-bar" style="height: 250px;"><canvas id="topProductosVentaChart"></canvas></div></div></div></div>
+        <div class="col-xl-4 col-lg-6"><div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-success">Top 5 Productos (Más Rentables)</h6></div><div class="card-body"><div class="chart-bar" style="height: 250px;"><canvas id="topProductosRentablesChart"></canvas></div></div></div></div>
+        <div class="col-xl-4 col-lg-6"><div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-info">Ventas por Vendedor</h6></div><div class="card-body"><div class="chart-bar" style="height: 250px;"><canvas id="ventasPorVendedorChart"></canvas></div></div></div></div>
     </div>
-    
-    <div class="row">
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Ventas por Categoría de Producto</h6></div>
-                <div class="card-body"><div class="chart-pie pt-4"><canvas id="ventasCategoriaChart"></canvas></div></div>
-            </div>
-        </div>
+    <div class="row"><div class="col-xl-6 col-lg-6"><div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Ventas por Hora del Día (Horas Pico)</h6></div><div class="card-body"><div class="chart-bar" style="height: 250px;"><canvas id="ventasPorHoraChart"></canvas></div></div></div></div>
+        <div class="col-xl-3 col-lg-6"><div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Ventas por Turno</h6></div><div class="card-body"><div class="chart-pie pt-4" style="height: 250px;"><canvas id="ventasPorTurnoChart"></canvas></div></div></div></div>
+        <div class="col-xl-3 col-lg-6"><div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Ventas por Categoría de Producto</h6></div><div class="card-body"><div class="chart-pie pt-4" style="height: 250px;"><canvas id="ventasCategoriaChart"></canvas></div></div></div></div>
     </div>
 
 </div> <div class="modal fade" id="gastoModal" tabindex="-1" aria-labelledby="gastoModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="gastoModalLabel">Registrar Nuevo Gasto</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><form id="gastoForm" method="POST" action="{% url 'finanzas_app:registrar_gasto' %}"><div class="modal-body">{% csrf_token %}<div class="mb-3"><label for="{{ gasto_form.categoria.id_for_label }}" class="form-label">{{ gasto_form.categoria.label }}</label><div class="input-group">{{ gasto_form.categoria }}<button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#categoriaGastoModal" title="Nueva Categoría"><i class="fas fa-plus"></i></button></div></div><div class="mb-3"><label for="{{ gasto_form.monto.id_for_label }}" class="form-label">{{ gasto_form.monto.label }}</label>{{ gasto_form.monto }}</div><div class="mb-3"><label for="{{ gasto_form.fecha_imputacion.id_for_label }}" class="form-label">{{ gasto_form.fecha_imputacion.label }}</label>{{ gasto_form.fecha_imputacion }}</div><div class="mb-3"><label for="{{ gasto_form.descripcion.id_for_label }}" class="form-label">{{ gasto_form.descripcion.label }}</label>{{ gasto_form.descripcion }}</div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary" id="guardarGastoBtn">Guardar Gasto</button></div></form></div></div></div>
@@ -111,15 +60,19 @@
     let ventasCategoriaChartInstance = null;
     let gastoModalInstance = null;
     let categoriaGastoModalInstance = null;
-    
     let topProductosVentaChartInstance = null;
     let topProductosRentablesChartInstance = null;
     let ventasPorVendedorChartInstance = null;
+    let ventasPorHoraChartInstance = null;
+    let ventasPorTurnoChartInstance = null;
 
     // URLs de la API
     const API_URL = "{% url 'finanzas_app:api_data' %}";
     const GASTO_FORM_URL = "{% url 'finanzas_app:registrar_gasto' %}";
     const CATEGORIA_GASTO_FORM_URL = "{% url 'finanzas_app:registrar_categoria_gasto' %}";
+    
+    // --- ¡NUEVO! URL base para el Excel ---
+    const EXCEL_URL_BASE = "{% url 'finanzas_app:exportar_excel' %}";
 
     // Función para formatear moneda
     function formatCurrency(value) {
@@ -128,8 +81,27 @@
         });
     }
 
-    // Función para cargar datos del dashboard (¡MODIFICADA!)
+    // --- ¡NUEVO! Función para actualizar el link del botón de Excel ---
+    function updateExcelLink() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const excelButton = document.getElementById('exportExcelButton');
+        
+        // Creamos la URL con los parámetros
+        const excelUrl = new URL(EXCEL_URL_BASE, window.location.origin);
+        excelUrl.searchParams.append('start', startDate);
+        excelUrl.searchParams.append('end', endDate);
+        
+        // Asignamos la URL al 'href' del botón
+        excelButton.href = excelUrl.href;
+    }
+
+    // Función para cargar datos del dashboard (MODIFICADA)
     async function fetchDataAndDrawCharts() {
+        
+        // --- ¡NUEVO! Actualizamos el link de Excel cada vez que filtramos ---
+        updateExcelLink();
+        
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
         const url = `${API_URL}?start=${startDate}&end=${endDate}`;
@@ -146,146 +118,66 @@
             drawEvolucionChart(data.charts.evolucion_ingresos_gastos);
             drawGastosChart(data.charts.gastos_por_categoria);
             drawVentasCategoriaChart(data.charts.ventas_por_categoria);
-            
-            // --- ¡INICIO DE LA CORRECCIÓN! ---
-            // Ahora pasamos el *nombre* de la variable (como string) a la función.
-            drawRankingChart(
-                'topProductosVentaChart',
-                'topProductosVentaChartInstance', // <-- Con comillas
-                'Top 5 Vendidos (Cantidad)',
-                data.charts.top_productos_venta,
-                '#4e73df',
-                false
-            );
-            
-            drawRankingChart(
-                'topProductosRentablesChart',
-                'topProductosRentablesChartInstance', // <-- Con comillas
-                'Top 5 Rentables (Ganancia)',
-                data.charts.top_productos_rentables,
-                '#1cc88a',
-                true
-            );
-            
-            drawRankingChart(
-                'ventasPorVendedorChart',
-                'ventasPorVendedorChartInstance', // <-- Con comillas
-                'Ventas por Vendedor',
-                data.charts.ventas_por_vendedor,
-                '#36b9cc',
-                true
-            );
-            // --- ¡FIN DE LA CORRECCIÓN! ---
+            drawRankingChart('topProductosVentaChart', 'topProductosVentaChartInstance', 'Top 5 Vendidos', data.charts.top_productos_venta, '#4e73df', false);
+            drawRankingChart('topProductosRentablesChart', 'topProductosRentablesChartInstance', 'Top 5 Rentables', data.charts.top_productos_rentables, '#1cc88a', true);
+            drawRankingChart('ventasPorVendedorChart', 'ventasPorVendedorChartInstance', 'Ventas Vendedor', data.charts.ventas_por_vendedor, '#36b9cc', true);
+            drawVentasPorHoraChart(data.charts.ventas_por_hora);
+            drawVentasPorTurnoChart(data.charts.ventas_por_turno);
             
         } catch (error) {
             console.error("Error al cargar datos del dashboard:", error);
             Swal.fire({
-                icon: 'error',
-                title: 'Error al cargar datos',
+                icon: 'error', title: 'Error al cargar datos',
                 text: `No se pudieron cargar los datos del dashboard. Revisa la consola.\nError: ${error.message}`,
             });
         }
     }
 
-    // Función para actualizar KPIs (Sin cambios)
+    // (Función updateKPIs - sin cambios)
     function updateKPIs(kpis) {
         document.getElementById('kpi-beneficio-neto').textContent = formatCurrency(kpis.beneficio_neto);
         document.getElementById('kpi-ingresos').textContent = formatCurrency(kpis.total_ingresos);
         document.getElementById('kpi-ganancia-bruta').textContent = formatCurrency(kpis.ganancia_bruta);
         document.getElementById('kpi-gastos').textContent = formatCurrency(kpis.total_gastos);
     }
-
-    // (Funciones de dibujo de gráficos: evolucion, gastos, ventasCategoria - sin cambios)
+    // (Funciones de dibujo de gráficos - sin cambios)
     function drawEvolucionChart(chartData) {
         const ctx = document.getElementById('evolucionChart').getContext('2d');
-        if (evolucionChartInstance) {
-            evolucionChartInstance.destroy();
-        }
-        evolucionChartInstance = new Chart(ctx, {
-            type: 'line', data: { labels: chartData.labels, datasets: [{ label: "Ingresos", data: chartData.ingresos_data, borderColor: 'rgba(78, 115, 223, 1)', backgroundColor: 'rgba(78, 115, 223, 0.1)', fill: true, tension: 0.1 }, { label: "Gastos", data: chartData.gastos_data, borderColor: 'rgba(231, 74, 59, 1)', backgroundColor: 'rgba(231, 74, 59, 0.1)', fill: true, tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: function(value, index, values) { return formatCurrency(value); } } } } }
-        });
+        if (evolucionChartInstance) { evolucionChartInstance.destroy(); }
+        evolucionChartInstance = new Chart(ctx, { type: 'line', data: { labels: chartData.labels, datasets: [{ label: "Ingresos", data: chartData.ingresos_data, borderColor: 'rgba(78, 115, 223, 1)', backgroundColor: 'rgba(78, 115, 223, 0.1)', fill: true, tension: 0.1 }, { label: "Gastos", data: chartData.gastos_data, borderColor: 'rgba(231, 74, 59, 1)', backgroundColor: 'rgba(231, 74, 59, 0.1)', fill: true, tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: function(value, index, values) { return formatCurrency(value); } } } } } });
     }
     function drawGastosChart(chartData) {
         const ctx = document.getElementById('gastosChart').getContext('2d');
-        if (gastosChartInstance) {
-            gastosChartInstance.destroy();
-        }
-        gastosChartInstance = new Chart(ctx, {
-            type: 'pie', data: { labels: chartData.labels, datasets: [{ data: chartData.data, backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#f8f9fc', '#e63946', '#a8dadc'], }] }, options: { responsive: true, maintainAspectRatio: false, }
-        });
+        if (gastosChartInstance) { gastosChartInstance.destroy(); }
+        gastosChartInstance = new Chart(ctx, { type: 'pie', data: { labels: chartData.labels, datasets: [{ data: chartData.data, backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'], }] }, options: { responsive: true, maintainAspectRatio: false, } });
     }
     function drawVentasCategoriaChart(chartData) {
         const ctx = document.getElementById('ventasCategoriaChart').getContext('2d');
-        if (ventasCategoriaChartInstance) {
-            ventasCategoriaChartInstance.destroy();
-        }
-        ventasCategoriaChartInstance = new Chart(ctx, {
-            type: 'doughnut', data: { labels: chartData.labels, datasets: [{ data: chartData.data, backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#f8f9fc', '#e63946', '#a8dadc'], }] }, options: { responsive: true, maintainAspectRatio: false, }
-        });
+        if (ventasCategoriaChartInstance) { ventasCategoriaChartInstance.destroy(); }
+        ventasCategoriaChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: chartData.labels, datasets: [{ data: chartData.data, backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'], }] }, options: { responsive: true, maintainAspectRatio: false, } });
     }
-    
-    // --- ¡NUEVO! Función genérica para dibujar los gráficos de ranking (¡CORREGIDA!) ---
-    /**
-     * Dibuja un gráfico de barras horizontal para los rankings.
-     * @param {string} canvasId - ID del <canvas>
-     * @param {string} chartInstanceName - ¡Nombre (string) de la variable global!
-     * @param {string} label - Etiqueta para el dataset
-     * @param {object} chartData - Objeto { labels: [], data: [] }
-     * @param {string} color - Color hexadecimal para las barras
-     * @param {boolean} isCurrency - Si el eje X debe formatearse como moneda
-     */
     function drawRankingChart(canvasId, chartInstanceName, label, chartData, color, isCurrency) {
-        // --- ¡INICIO DE LA CORRECCIÓN! ---
-        // Ahora usamos el 'chartInstanceName' (string) para acceder a la variable global
         let instance = window[chartInstanceName]; 
-        // --- ¡FIN DE LA CORRECCIÓN! ---
-        
         const ctx = document.getElementById(canvasId).getContext('2d');
-        if (instance) {
-            instance.destroy();
-        }
-        
-        const options = {
-            type: 'bar',
-            data: {
-                labels: chartData.labels,
-                datasets: [{
-                    label: label,
-                    data: chartData.data,
-                    backgroundColor: color,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y', // Horizontal
-                scales: {
-                    x: {
-                        ticks: {}
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        };
-        
+        if (instance) { instance.destroy(); }
+        const options = { type: 'bar', data: { labels: chartData.labels, datasets: [{ label: label, data: chartData.data, backgroundColor: color, }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { ticks: {} } }, plugins: { legend: { display: false } } } };
         if (isCurrency) {
-            options.options.scales.x.ticks.callback = function(value) {
-                return formatCurrency(value);
-            };
+            options.options.scales.x.ticks.callback = function(value) { return formatCurrency(value); };
         }
-
-        // --- ¡INICIO DE LA CORRECCIÓN! ---
-        // Guardamos el gráfico en la variable global usando su nombre
         window[chartInstanceName] = new Chart(ctx, options);
-        // --- ¡FIN DE LA CORRECCIÓN! ---
+    }
+    function drawVentasPorHoraChart(chartData) {
+        const ctx = document.getElementById('ventasPorHoraChart').getContext('2d');
+        if (ventasPorHoraChartInstance) { ventasPorHoraChartInstance.destroy(); }
+        ventasPorHoraChartInstance = new Chart(ctx, { type: 'bar', data: { labels: chartData.labels, datasets: [{ label: 'Ventas por Hora', data: chartData.data, backgroundColor: '#4e73df', }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: function(value) { return formatCurrency(value); } } }, x: { ticks: { autoSkip: true, maxTicksLimit: 12 } } }, plugins: { legend: { display: false } } } });
+    }
+    function drawVentasPorTurnoChart(chartData) {
+        const ctx = document.getElementById('ventasPorTurnoChart').getContext('2d');
+        if (ventasPorTurnoChartInstance) { ventasPorTurnoChartInstance.destroy(); }
+        ventasPorTurnoChartInstance = new Chart(ctx, { type: 'pie', data: { labels: chartData.labels, datasets: [{ data: chartData.data, backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc'], }] }, options: { responsive: true, maintainAspectRatio: false, } });
     }
 
-
-    // --- (Funciones para parsear errores de Django - sin cambios) ---
+    // --- (Funciones de Modales y SweetAlert - sin cambios) ---
     function parseDjangoErrors(jsonErrors) {
         try {
             const errors = JSON.parse(jsonErrors);
@@ -298,12 +190,8 @@
             }
             errorHtml += '</ul>';
             return errorHtml;
-        } catch(e) {
-            return "Error desconocido. Revisa la consola.";
-        }
+        } catch(e) { return "Error desconocido. Revisa la consola."; }
     }
-
-    // --- (Lógica de Modales con SweetAlert - sin cambios) ---
     async function handleGastoSubmit(event) {
         event.preventDefault(); 
         const form = event.target;
@@ -357,20 +245,35 @@
         }
     }
     
-    // --- Ejecución (sin cambios) ---
+    // --- Ejecución (¡MODIFICADO!) ---
     document.addEventListener('DOMContentLoaded', () => {
+        // Instancias de Modales
         const gastoModalEl = document.getElementById('gastoModal');
         const categoriaGastoModalEl = document.getElementById('categoriaGastoModal');
         gastoModalInstance = new bootstrap.Modal(gastoModalEl);
         categoriaGastoModalInstance = new bootstrap.Modal(categoriaGastoModalEl);
+        
+        // Listeners de Formularios
         const gastoForm = document.getElementById('gastoForm');
         gastoForm.addEventListener('submit', handleGastoSubmit);
         const categoriaGastoForm = document.getElementById('categoriaGastoForm');
         categoriaGastoForm.addEventListener('submit', handleCategoriaGastoSubmit);
+        
+        // Limpieza de Modales
         gastoModalEl.addEventListener('hidden.bs.modal', () => { gastoForm.reset(); });
         categoriaGastoModalEl.addEventListener('hidden.bs.modal', () => { categoriaGastoForm.reset(); });
+        
+        // Carga inicial de datos
         fetchDataAndDrawCharts();
+        
+        // Listener del botón de filtrar
         document.getElementById('filterButton').addEventListener('click', fetchDataAndDrawCharts);
+        
+        // --- ¡NUEVO! Listeners para actualizar el link de Excel ---
+        // Se actualiza en la carga inicial (dentro de fetchData)
+        // y cada vez que el usuario cambia una fecha.
+        document.getElementById('startDate').addEventListener('change', updateExcelLink);
+        document.getElementById('endDate').addEventListener('change', updateExcelLink);
     });
 
 </script>

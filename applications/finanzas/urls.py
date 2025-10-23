@@ -26,10 +26,17 @@ urlpatterns = [
         name='registrar_gasto'
     ),
     
-    # 4. ¡NUEVO! El Endpoint para guardar la nueva categoría de gasto
+    # 4. El Endpoint para guardar la nueva categoría de gasto
     path(
         'registrar-categoria-gasto/', 
         views.RegistrarCategoriaGastoView.as_view(), 
         name='registrar_categoria_gasto'
+    ),
+    
+    # 5. ¡NUEVO! El Endpoint para descargar el reporte de Excel
+    path(
+        'exportar-excel/', 
+        views.ExportarExcelView.as_view(), 
+        name='exportar_excel'
     ),
 ]
