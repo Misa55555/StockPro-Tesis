@@ -26,5 +26,7 @@ urlpatterns = [
     # URLs de la app Ventas
     path('ventas/', include('applications.ventas.urls')),
     path('select2/', include('django_select2.urls')),
+
+    path('finanzas/', include('applications.finanzas.urls')),
 ]
 

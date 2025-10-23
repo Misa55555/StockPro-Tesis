@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'applications.pedidos',
     'applications.cierres',
     'applications.dashboard',
+    'applications.finanzas',
     'django_select2',
     'django_filters',
 ]
