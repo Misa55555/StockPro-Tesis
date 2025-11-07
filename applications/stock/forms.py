@@ -67,19 +67,47 @@ class MarcaForm(forms.ModelForm):
 class LoteForm(forms.ModelForm):
     producto = forms.ModelChoiceField(
         queryset=Producto.objects.filter(is_active=True),
-        widget=Select2Widget
+        widget=Select2Widget(attrs={'class': 'form-control', 'id': 'id_producto_select'}) # Añadimos ID para JS
     )
+    
+   
+    costo_total_compra = forms.DecimalField(
+        label="Costo Total de la Factura",
+        required=False,
+        max_digits=12, decimal_places=2,
+        help_text="Ingresa el total pagado por esta cantidad de productos para calcular el costo unitario automáticamente.",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_costo_total'})
+    )
+
+    actualizar_precio = forms.BooleanField(
+        label="¿Actualizar Precio de Venta del Producto?",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_check_precio'})
+    )
+    
+    nuevo_precio_venta = forms.DecimalField(
+        label="Nuevo Precio de Venta",
+        required=False,
+        max_digits=10, decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_nuevo_precio', 'readonly': True})
+    )
+    
+
     class Meta:
         model = Lote
-        fields = ['producto', 'cantidad_actual', 'precio_compra' ,'fecha_vencimiento']
+        fields = ['producto', 'cantidad_actual', 'precio_compra', 'fecha_vencimiento']
         widgets = {
-            # --- CAMBIO CLAVE ---
-            'producto': Select2Widget,
-            # --- FIN DEL CAMBIO ---
-            'cantidad_actual': forms.NumberInput(attrs={'class': 'form-control'}),
-            'precio_compra': forms.NumberInput(attrs={'class': 'form-control'}),
+            # Añadimos IDs específicos para facilitar el JavaScript
+            'cantidad_actual': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_cantidad'}),
+            'precio_compra': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_precio_compra_unitario'}),
             'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
+        labels = {
+            'cantidad_actual': 'Cantidad Recibida',
+            'precio_compra': 'Costo Unitario (Calculado)',
+        }
+
     def clean_fecha_vencimiento(self):
         fecha_vencimiento = self.cleaned_data.get('fecha_vencimiento')
         

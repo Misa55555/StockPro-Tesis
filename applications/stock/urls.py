@@ -28,9 +28,12 @@ urlpatterns = [
     path('stock/cargar-lote/', views.CargarLoteView.as_view(), name='cargar_lote'),
     path('stock/exportar-excel/', views.exportar_stock_excel, name='exportar_stock_excel'),
     path('stock/importar-excel/', views.ImportarProductosView.as_view(), name='importar_stock_excel'),
-    
+    path('api/producto/details/', views.get_producto_details, name='api_product_details'),
+
     # URLs de Toggle (Ocultar/Restaurar)
     path('stock/toggle/<int:pk>/', views.toggle_product_status, name='product_toggle'),
     path('categorias/toggle/<int:pk>/', views.toggle_category_status, name='category_toggle'),
     path('marcas/toggle/<int:pk>/', views.toggle_marca_status, name='marca_toggle'),
+
+
 ]

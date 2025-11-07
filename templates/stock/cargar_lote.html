@@ -7,20 +7,215 @@
 {% block title %}Cargar Stock de Producto{% endblock %}
 
 {% block content %}
-<h1>Cargar Stock (Nuevo Lote)</h1>
-<p>Selecciona un producto existente y añade la cantidad, precio de compra y fecha de vencimiento del nuevo lote.</p>
-
-<div class="card shadow-sm mt-4">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-
-            {{ form.as_p }}
-            <div class="mt-4">
-                <button type="submit" class="btn btn-success">Guardar Lote</button>
-                <a href="{% url 'stock_app:product_list' %}" class="btn btn-secondary">Cancelar</a>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">📥 Cargar Nuevo Lote de Stock</h4>
             </div>
-        </form>
+            <div class="card-body">
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" id="loteForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">{{ form.producto.label }}</label>
+                        {{ form.producto }}
+                        {% if form.producto.errors %}
+                            <div class="text-danger small mt-1">{{ form.producto.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">Busca el producto al que deseas añadir stock.</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 border-end">
+                            <h5 class="text-muted mb-3">Datos de Compra / Ingreso</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form.cantidad_actual.label }}</label>
+                                {{ form.cantidad_actual }}
+                                {% if form.cantidad_actual.errors %}
+                                    <div class="text-danger small mt-1">{{ form.cantidad_actual.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="card bg-light mb-3">
+                                <div class="card-body p-2">
+                                    <label class="form-label small text-muted">{{ form.costo_total_compra.label }} (Opcional)</label>
+                                    {{ form.costo_total_compra }}
+                                    {% if form.costo_total_compra.errors %}
+                                        <div class="text-danger small mt-1">{{ form.costo_total_compra.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text small">Si llenas esto, el costo unitario se calcula solo.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form.precio_compra.label }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.precio_compra }}
+                                </div>
+                                {% if form.precio_compra.errors %}
+                                    <div class="text-danger small mt-1">{{ form.precio_compra.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form.fecha_vencimiento.label }}</label>
+                                {{ form.fecha_vencimiento }}
+                                {% if form.fecha_vencimiento.errors %}
+                                    <div class="alert alert-danger py-1 px-2 mt-1 small">
+                                        <i class="fas fa-exclamation-circle"></i> {{ form.fecha_vencimiento.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                </div>
+                        </div>
+
+                        <div class="col-md-6 bg-light-subtle p-3 rounded">
+                            <h5 class="text-muted mb-3">Precio de Venta al Público</h5>
+                            
+                            <div class="alert alert-info py-2 small">
+                                <i class="fas fa-info-circle"></i> El precio actual se cargará automáticamente al seleccionar un producto.
+                            </div>
+
+                            <div class="mb-3 form-check form-switch">
+                                {{ form.actualizar_precio }}
+                                <label class="form-check-label fw-bold" for="id_check_precio">
+                                    {{ form.actualizar_precio.label }}
+                                </label>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form.nuevo_precio_venta.label }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.nuevo_precio_venta }}
+                                </div>
+                                {% if form.nuevo_precio_venta.errors %}
+                                    <div class="text-danger small mt-1">{{ form.nuevo_precio_venta.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div id="rentabilidad-info" class="d-none mt-3">
+                                <h6>Rentabilidad Estimada: <span id="margen-calculado" class="badge bg-success">0%</span></h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">Guardar Lote y Actualizar</button>
+                        <a href="{% url 'stock_app:product_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const selectProducto = $('#id_producto_select');
+    const inputCantidad = document.getElementById('id_cantidad');
+    const inputCostoTotal = document.getElementById('id_costo_total');
+    const inputCostoUnitario = document.getElementById('id_precio_compra_unitario');
+    const checkActualizarPrecio = document.getElementById('id_check_precio');
+    const inputNuevoPrecioVenta = document.getElementById('id_nuevo_precio');
+    const margenInfoDiv = document.getElementById('rentabilidad-info');
+    const margenCalculadoBadge = document.getElementById('margen-calculado');
+
+    // Función para manejar el estado inicial del precio de venta
+    function handlePrecioVentaState() {
+        // Si el checkbox NO está marcado, el input debe ser readonly
+        if (!checkActualizarPrecio.checked) {
+            inputNuevoPrecioVenta.readOnly = true;
+            inputNuevoPrecioVenta.classList.remove('bg-white');
+        } else {
+            // Si SÍ está marcado, debe ser editable
+            inputNuevoPrecioVenta.readOnly = false;
+            inputNuevoPrecioVenta.classList.add('bg-white');
+        }
+    }
+
+    // Ejecutar al inicio por si el navegador recuerda el estado del checkbox al recargar
+    handlePrecioVentaState();
+
+    selectProducto.on('select2:select', function (e) {
+        const productId = e.params.data.id;
+        if (productId) {
+            fetch(`{% url 'stock_app:api_product_details' %}?product_id=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        inputNuevoPrecioVenta.value = data.precio_venta;
+                        calculateMargin();
+                    }
+                });
+        }
+    });
+
+    checkActualizarPrecio.addEventListener('change', function() {
+        handlePrecioVentaState();
+        if (this.checked) {
+            inputNuevoPrecioVenta.focus();
+        }
+    });
+
+    function calculateUnitCost() {
+        const cantidad = parseFloat(inputCantidad.value) || 0;
+        const totalCompra = parseFloat(inputCostoTotal.value) || 0;
+        if (cantidad > 0 && totalCompra > 0) {
+            inputCostoUnitario.value = (totalCompra / cantidad).toFixed(2);
+        }
+        calculateMargin();
+    }
+
+    function calculateTotalCost() {
+         const cantidad = parseFloat(inputCantidad.value) || 0;
+         const unitario = parseFloat(inputCostoUnitario.value) || 0;
+         if (cantidad > 0 && unitario > 0 && document.activeElement === inputCostoUnitario) {
+             inputCostoTotal.value = (cantidad * unitario).toFixed(2);
+         }
+         calculateMargin();
+    }
+
+    function calculateMargin() {
+        const costo = parseFloat(inputCostoUnitario.value) || 0;
+        const venta = parseFloat(inputNuevoPrecioVenta.value) || 0;
+        if (costo > 0 && venta > 0) {
+            margenInfoDiv.classList.remove('d-none');
+            const margen = ((venta - costo) / costo) * 100;
+            margenCalculadoBadge.textContent = margen.toFixed(1) + '%';
+            if (margen < 15) {
+                margenCalculadoBadge.className = 'badge bg-danger';
+            } else if (margen < 30) {
+                margenCalculadoBadge.className = 'badge bg-warning text-dark';
+            } else {
+                margenCalculadoBadge.className = 'badge bg-success';
+            }
+        } else {
+            margenInfoDiv.classList.add('d-none');
+        }
+    }
+
+    inputCantidad.addEventListener('input', calculateUnitCost);
+    inputCostoTotal.addEventListener('input', calculateUnitCost);
+    inputCostoUnitario.addEventListener('input', calculateTotalCost);
+    inputNuevoPrecioVenta.addEventListener('input', calculateMargin);
+
+    // Recalcular margen al inicio si hay valores (por ejemplo, si falló la validación y se recargó la página)
+    if (inputCostoUnitario.value && inputNuevoPrecioVenta.value) {
+        calculateMargin();
+    }
+});
+</script>
 {% endblock %}

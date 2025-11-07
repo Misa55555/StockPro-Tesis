@@ -12,8 +12,8 @@ from .forms import ProductoForm, CategoriaForm, MarcaForm, LoteForm, UploadFileF
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect # Añade get_object_or_404 y redirect
-
-
+from django.http import JsonResponse
+from django.db import transaction
 
 # --- Vistas de Producto ---
 class ProductListView(ListView):
@@ -156,11 +156,33 @@ class CargarLoteView(CreateView):
     success_url = reverse_lazy('stock_app:product_list')
 
     def form_valid(self, form):
-        lote = form.save(commit=False)
-        lote.cantidad_inicial = lote.cantidad_actual
-        lote.save()
-        return super().form_valid(form)
+        # Usamos transaction.atomic para que si falla algo, no se guarde nada a medias
+        with transaction.atomic():
+            # 1. Guardamos el Lote normalmente
+            lote = form.save(commit=False)
+            # Aseguramos que cantidad inicial sea igual a la actual al crearlo
+            # (asumiendo que tu modelo Lote tiene este campo si lo usas para históricos)
+            # Si no tienes 'cantidad_inicial' en tu modelo Lote, borra esta línea:
+            # lote.cantidad_inicial = lote.cantidad_actual 
+            lote.save()
 
+            # 2. Verificamos si hay que actualizar el precio del producto padre
+            if form.cleaned_data.get('actualizar_precio') and form.cleaned_data.get('nuevo_precio_venta'):
+                nuevo_precio = form.cleaned_data.get('nuevo_precio_venta')
+                producto = lote.producto
+                
+                # Opcional: registrar en un log si el precio cambió
+                if producto.precio_venta != nuevo_precio:
+                     # Aquí podrías guardar un historial de precios si quisieras escalar a futuro
+                     pass
+
+                producto.precio_venta = nuevo_precio
+                producto.save()
+                messages.success(self.request, f"Se cargó el stock y se actualizó el precio de {producto.nombre} a ${nuevo_precio}")
+            else:
+                messages.success(self.request, "Stock cargado correctamente.")
+
+        return super(CreateView, self).form_valid(form) # Llamamos al form_valid padre correctamente
 # --- Vista de Importación de Excel ---
 class ImportarProductosView(FormView):
     template_name = 'stock/importar_productos.html'
@@ -236,3 +258,19 @@ def toggle_marca_status(request, pk):
     marca.save()
     messages.info(request, f'El estado de la marca "{marca.nombre}" ha sido actualizado.')
     return redirect('stock_app:marca_list')
+
+
+# --- VISTA SUJERIDA POR EL PROFE ---
+def get_producto_details(request):
+    """Vista AJAX para obtener detalles de un producto seleccionado"""
+    product_id = request.GET.get('product_id')
+    if product_id:
+        try:
+            producto = Producto.objects.get(pk=product_id)
+            return JsonResponse({
+                'status': 'success',
+                'precio_venta': producto.precio_venta
+            })
+        except Producto.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Producto no encontrado'}, status=404)
+    return JsonResponse({'status': 'error', 'message': 'Falta ID'}, status=400)
