@@ -14,24 +14,27 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect # Añade get_object_or_404 y redirect
 from django.http import JsonResponse
 from django.db import transaction
+from django.utils import timezone
 
 # --- Vistas de Producto ---
 class ProductListView(ListView):
     model = Producto
     template_name = "stock/product_list.html"
-    context_object_name = 'productos' # Mantenemos esto por compatibilidad
+    context_object_name = 'productos'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # Usamos select_related para claves foráneas simples (marca, categoria, unidad)
+        # Y prefetch_related para la relación inversa (lotes) IMPORTANTE para tu nueva funcionalidad
+        queryset = super().get_queryset().select_related(
+            'marca', 'categoria', 'unidad_medida'
+        ).prefetch_related('lotes')
         
-        # Lógica para mostrar/ocultar productos inactivos
         mostrar_ocultos = self.request.GET.get('mostrar_ocultos')
         if mostrar_ocultos:
             queryset = queryset.filter(is_active=False)
         else:
             queryset = queryset.filter(is_active=True)
             
-        # Creamos el filterset con el queryset ya pre-filtrado por estado
         self.filterset = ProductFilter(self.request.GET, queryset=queryset)
         return self.filterset.qs
 
@@ -42,6 +45,7 @@ class ProductListView(ListView):
         context["mostrar_ocultos"] = self.request.GET.get('mostrar_ocultos')
         # Pasamos la lista filtrada de productos a la variable 'productos'
         context['productos'] = self.get_queryset()
+        context['today'] = timezone.now().date()
         return context
 
 class ProductCreateView(CreateView):
@@ -183,6 +187,24 @@ class CargarLoteView(CreateView):
                 messages.success(self.request, "Stock cargado correctamente.")
 
         return super(CreateView, self).form_valid(form) # Llamamos al form_valid padre correctamente
+
+def lote_delete(request, pk):
+    """
+    Vista simple para eliminar un lote específico desde el desplegable de productos.
+    """
+    lote = get_object_or_404(Lote, pk=pk)
+    producto_nombre = lote.producto.nombre
+    
+    # Opcional: Validaciones extra (ej. no borrar si tiene movimientos asociados, 
+    # aunque tu sistema actual no vincula ventas directamente a lotes en la BD, así que es seguro borrar)
+    
+    lote.delete()
+    messages.success(request, f'Se ha eliminado un lote de {producto_nombre}.')
+    
+    # Redirigimos de vuelta a la lista de productos
+    return redirect('stock_app:product_list')
+
+
 # --- Vista de Importación de Excel ---
 class ImportarProductosView(FormView):
     template_name = 'stock/importar_productos.html'
