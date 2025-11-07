@@ -22,8 +22,8 @@ class MetodoPago(models.Model):
 # --- MODELO VENTA MODIFICADO ---
 class Venta(models.Model):
     fecha_hora = models.DateTimeField('Fecha y Hora', auto_now_add=True)
+    descuento = models.DecimalField('Descuento Aplicado', max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField('Total', max_digits=10, decimal_places=2, default=0)
-    
     # --- CAMBIO CLAVE: Usamos una ForeignKey al nuevo modelo ---
     metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.SET_NULL, null=True, verbose_name='Método de Pago')
     

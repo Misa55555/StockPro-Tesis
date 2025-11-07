@@ -57,18 +57,35 @@
                     </div>
                     <hr>
                     
-                    <div id="ticket-items-container" style="min-height: 40vh; max-height: 40vh; overflow-y: auto;">
-                        <p class="text-center text-muted">Añada productos al ticket</p>
+                    <div id="ticket-items-container" style="min-height: 30vh; max-height: 30vh; overflow-y: auto;">
+                        <p class="text-center text-muted py-5">Añada productos al ticket</p>
                     </div>
                     
-                    <div class="mt-3">
-                        <h4 class="d-flex justify-content-between align-items-center">
-                            <strong>Total:</strong>
-                            <span id="ticket-total-amount">$0.00</span>
-                        </h4>
-                        <div class="form-group mt-3">
-                            <label for="payment-method-select">Método de Pago</label>
-                            <select id="payment-method-select" class="form-control">
+                    <div class="mt-3 bg-light p-3 rounded">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="ticket-subtotal" class="fw-bold">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Descuento ($):</span>
+                            <div style="width: 130px;">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" id="discount-input" class="form-control text-end" min="0" step="0.01" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h3 class="d-flex justify-content-between align-items-center font-weight-bold">
+                            Total a Pagar:
+                            <span id="ticket-total-amount" class="text-success">$0.00</span>
+                        </h3>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="form-group mb-3">
+                            <label for="payment-method-select" class="form-label fw-bold">Método de Pago</label>
+                            <select id="payment-method-select" class="form-select form-select-lg">
                                 {% for metodo in metodos_pago %}
                                 <option value="{{ metodo.id }}">{{ metodo.nombre }}</option>
                                 {% empty %}
@@ -76,7 +93,9 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <button class="btn btn-success btn-block btn-lg mt-3" id="pay-button">PAGAR / COBRAR</button>
+                        <button class="btn btn-success btn-lg w-100 py-3" id="pay-button">
+                            <i class="fas fa-cash-register"></i> PAGAR / COBRAR
+                        </button>
                     </div>
                 </div>
             </div>
@@ -87,7 +106,6 @@
 
 {% block extra_js %}
 <script>
-    // Función auxiliar para obtener el token CSRF de las cookies
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -105,11 +123,15 @@
     const csrftoken = getCookie('csrftoken');
 
     document.addEventListener('DOMContentLoaded', function () {
-        // --- 1. REFERENCIAS A ELEMENTOS DEL DOM ---
         const productSearchInput = document.getElementById('product-search-input');
         const productListContainer = document.getElementById('product-list-container');
         const ticketItemsContainer = document.getElementById('ticket-items-container');
+        
+        // Referencias nuevas para totales
+        const ticketSubtotal = document.getElementById('ticket-subtotal');
         const ticketTotalAmount = document.getElementById('ticket-total-amount');
+        const discountInput = document.getElementById('discount-input');
+
         const payButton = document.getElementById('pay-button');
         const allProductItems = Array.from(productListContainer.getElementsByClassName('product-item'));
         const assignCustomerBtn = document.getElementById('assign-customer-btn');
@@ -118,16 +140,16 @@
         const modalContentWrapper = document.getElementById('modal-content-wrapper');
         const ticketCustomerName = document.getElementById('ticket-customer-name');
 
-        // --- 2. ESTADO DEL TICKET ---
+        // ESTADO DEL TICKET (ACTUALIZADO CON DESCUENTO)
         let posTicket = {
             items: {},
+            subtotal: 0,
+            discount: 0,
             total: 0,
             clienteId: null,
             metodoPagoId: null
         };
         
-        // --- 3. FUNCIONES PRINCIPALES ---
-
         function addProductToTicket(product) {
             const stock = parseFloat(product.stock);
             const currentQuantity = posTicket.items[product.id] ? posTicket.items[product.id].quantity : 0;
@@ -170,30 +192,48 @@
             renderTicket();
         }
 
+        // FUNCIÓN DE RENDERIZADO (ACTUALIZADA CON CÁLCULOS)
         function renderTicket() {
-            ticketItemsContainer.innerHTML = Object.keys(posTicket.items).length === 0 ? '<p class="text-center text-muted">Añada productos al ticket</p>' : '';
-            let newTotal = 0;
+            ticketItemsContainer.innerHTML = Object.keys(posTicket.items).length === 0 ? '<p class="text-center text-muted py-5">Añada productos al ticket</p>' : '';
+            
+            let newSubtotal = 0;
             for (const productId in posTicket.items) {
                 const item = posTicket.items[productId];
-                const subtotal = item.quantity * item.price;
-                newTotal += subtotal;
+                const lineTotal = item.quantity * item.price;
+                newSubtotal += lineTotal;
+                
                 const itemHTML = `
-                    <div class="ticket-item mb-2" data-product-id="${item.id}">
-                        <div class="font-weight-bold">${item.name}</div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <button class="btn btn-sm btn-outline-secondary py-0 px-2 quantity-change" data-change="-1">-</button>
-                                <span class="mx-2">${item.quantity}</span>
-                                <button class="btn btn-sm btn-outline-secondary py-0 px-2 quantity-change" data-change="1">+</button>
-                                <span class="mx-2 text-muted">x $${item.price.toFixed(2)}</span>
+                    <div class="ticket-item mb-2 p-2 border rounded bg-white" data-product-id="${item.id}">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">${item.name}</span>
+                            <span class="fw-bold">$${lineTotal.toFixed(2)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <small class="text-muted">$${item.price.toFixed(2)} c/u</small>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-secondary quantity-change" data-change="-1">-</button>
+                                <span class="btn btn-light disabled" style="width: 40px;">${item.quantity}</span>
+                                <button class="btn btn-outline-secondary quantity-change" data-change="1">+</button>
                             </div>
-                            <div class="font-weight-bold">$${subtotal.toFixed(2)}</div>
                         </div>
                     </div>`;
                 ticketItemsContainer.innerHTML += itemHTML;
             }
-            posTicket.total = newTotal;
-            ticketTotalAmount.textContent = `$${newTotal.toFixed(2)}`;
+
+            // Cálculos finales
+            posTicket.subtotal = newSubtotal;
+            
+            // Evitar que el descuento sea mayor que el subtotal
+            if (posTicket.discount > posTicket.subtotal) {
+                posTicket.discount = posTicket.subtotal;
+                discountInput.value = posTicket.discount.toFixed(2);
+            }
+            
+            posTicket.total = Math.max(0, posTicket.subtotal - posTicket.discount);
+
+            // Actualizar DOM
+            ticketSubtotal.textContent = `$${posTicket.subtotal.toFixed(2)}`;
+            ticketTotalAmount.textContent = `$${posTicket.total.toFixed(2)}`;
         }
 
         function selectClient(cliente) {
@@ -214,8 +254,7 @@
             }
         }
 
-        // --- 4. EVENT LISTENERS ---
-
+        // EVENT LISTENERS
         productSearchInput.addEventListener('keyup', function() {
             const searchTerm = this.value.toLowerCase();
             allProductItems.forEach(item => {
@@ -229,7 +268,6 @@
             const productItem = event.target.closest('.product-item');
             if (productItem) {
                 event.preventDefault();
-                // --- CORRECCIÓN CLAVE: Mapeamos los nombres correctos ---
                 const product = {
                     id: productItem.dataset.productId,
                     name: productItem.dataset.productName,
@@ -249,41 +287,32 @@
             }
         });
 
+        // LISTENER NUEVO PARA EL DESCUENTO
+        discountInput.addEventListener('input', function(e) {
+            let val = parseFloat(e.target.value);
+            if (isNaN(val) || val < 0) val = 0;
+            posTicket.discount = val;
+            renderTicket();
+        });
+
         assignCustomerBtn.addEventListener('click', function() {
-            fetch("{% url 'ventas_app:crear_cliente_modal' %}")
+            // (Tu lógica de cliente existente aquí, no cambia)
+             fetch("{% url 'ventas_app:crear_cliente_modal' %}")
                 .then(response => response.text())
                 .then(html => {
                     modalContentWrapper.innerHTML = html;
                     mainModal.show();
-                    
                     $('#customer-search-select').select2({
                         dropdownParent: $(mainModalEl),
                         placeholder: 'Escribe un nombre o DNI...',
-                        ajax: {
-                            url: "{% url 'ventas_app:buscar_clientes' %}",
-                            dataType: 'json',
-                            delay: 250,
-                            data: params => ({ term: params.term }),
-                            processResults: data => ({ results: data })
-                        }
+                        ajax: { url: "{% url 'ventas_app:buscar_clientes' %}", dataType: 'json', delay: 250, data: params => ({ term: params.term }), processResults: data => ({ results: data }) }
                     }).on('select2:select', e => selectClient(e.params.data));
-
                     modalContentWrapper.addEventListener('submit', function(e) {
                         if (e.target && e.target.id === 'create-customer-form') {
                             e.preventDefault();
-                            fetch(e.target.action, {
-                                method: 'POST',
-                                body: new FormData(e.target),
-                                headers: { 'X-CSRFToken': csrftoken }
-                            })
+                            fetch(e.target.action, { method: 'POST', body: new FormData(e.target), headers: { 'X-CSRFToken': csrftoken } })
                             .then(response => response.json())
-                            .then(data => {
-                                if (data.status === 'success') {
-                                    selectClient(data.cliente);
-                                } else {
-                                    document.getElementById('create-customer-form-container').innerHTML = data.form_html;
-                                }
-                            });
+                            .then(data => { if (data.status === 'success') { selectClient(data.cliente); } else { document.getElementById('create-customer-form-container').innerHTML = data.form_html; } });
                         }
                     });
                 });
@@ -300,8 +329,10 @@
                 Swal.fire({icon: 'error', title: 'Falta Método de Pago', text: 'Por favor, selecciona un método de pago.'});
                 return;
             }
+            
+            // Deshabilitar botón para evitar doble cobro
             payButton.disabled = true;
-            payButton.textContent = 'Procesando...';
+            payButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
             fetch("{% url 'ventas_app:pos' %}", {
                 method: 'POST',
@@ -313,21 +344,23 @@
                 if (data.status === 'success') {
                     modalContentWrapper.innerHTML = data.modal_html;
                     mainModal.show();
-                    
+                    // Listeners para el modal de ticket
                     document.getElementById('new-sale-btn').addEventListener('click', () => window.location.reload());
                     document.getElementById('print-ticket-btn').addEventListener('click', printTicket);
+                    // Forzar recarga al cerrar el modal manualmente también
+                    mainModalEl.addEventListener('hidden.bs.modal', () => window.location.reload(), { once: true });
 
                 } else {
-                    Swal.fire({ icon: 'error', title: 'Error en la Venta', text: data.message });
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.message });
                     payButton.disabled = false;
-                    payButton.textContent = 'PAGAR / COBRAR';
+                    payButton.innerHTML = '<i class="fas fa-cash-register"></i> PAGAR / COBRAR';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                Swal.fire({ icon: 'error', title: 'Error Inesperado', text: 'No se pudo procesar la venta. Revisa la consola.' });
+                Swal.fire({ icon: 'error', title: 'Error Inesperado', text: 'Revisa la consola.' });
                 payButton.disabled = false;
-                payButton.textContent = 'PAGAR / COBRAR';
+                payButton.innerHTML = '<i class="fas fa-cash-register"></i> PAGAR / COBRAR';
             });
         });
 

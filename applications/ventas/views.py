@@ -53,13 +53,24 @@ class POSView(LoginRequiredMixin, ListView):
     def post(self, request, *args, **kwargs):
         """
         Este método maneja la lógica cuando se presiona "PAGAR / COBRAR".
+        Procesa la venta, aplica descuentos, valida stock y realiza el descuento FEFO.
         """
         data = json.loads(request.body)
         items = data.get('items', {})
 
+        # --- NUEVO: Recuperar el descuento enviado desde el frontend ---
+        try:
+            descuento_input = Decimal(str(data.get('discount', 0)))
+            if descuento_input < 0: descuento_input = Decimal('0.00')
+        except (ValueError, TypeError):
+            descuento_input = Decimal('0.00')
+        # ------------------------------------------------------------
+
         try:
             with transaction.atomic():
                 # --- PASO 1: VALIDACIÓN DE STOCK ---
+                # Primero validamos que HAYA stock suficiente para TODOS los items.
+                # Si falta algo, fallamos antes de crear nada.
                 for product_id, item_data in items.items():
                     producto = Producto.objects.get(id=product_id)
                     cantidad_solicitada = Decimal(str(item_data['quantity']))
@@ -67,19 +78,30 @@ class POSView(LoginRequiredMixin, ListView):
                     stock_total = Lote.objects.filter(
                         producto=producto, 
                         cantidad_actual__gt=0
-                    ).aggregate(total=Sum('cantidad_actual'))['total'] or 0
+                    ).aggregate(total=Sum('cantidad_actual'))['total'] or Decimal('0.00')
 
                     if cantidad_solicitada > stock_total:
                         raise ValueError(f"Stock insuficiente para {producto.nombre}. Solicitado: {cantidad_solicitada}, Disponible: {stock_total}")
 
-                # --- PASO 2: CREACIÓN DE LA VENTA ---
+                # --- PASO 2: CÁLCULO DE TOTALES Y CREACIÓN DE LA VENTA ---
                 metodo_pago = MetodoPago.objects.get(id=data.get('metodoPagoId'))
                 cliente = None
                 if data.get('clienteId'):
                     cliente = Cliente.objects.get(pk=data.get('clienteId'))
 
+                # NUEVO: Calculamos el subtotal real en el backend por seguridad
+                subtotal_calculado = Decimal('0.00')
+                for item_data in items.values():
+                     subtotal_calculado += Decimal(str(item_data['price'])) * Decimal(str(item_data['quantity']))
+                
+                # NUEVO: Aplicamos el descuento
+                total_final = subtotal_calculado - descuento_input
+                if total_final < 0: total_final = Decimal('0.00') # Evitar totales negativos
+
+                # Creamos la venta con los datos calculados
                 venta = Venta.objects.create(
-                    total=Decimal(str(data.get('total'))),
+                    total=total_final,
+                    descuento=descuento_input, # Guardamos el descuento aplicado
                     metodo_pago=metodo_pago,
                     vendedor=request.user,
                     cliente=cliente,
@@ -89,32 +111,45 @@ class POSView(LoginRequiredMixin, ListView):
                 for product_id, item_data in items.items():
                     producto = Producto.objects.get(id=product_id)
                     cantidad_a_vender = Decimal(str(item_data['quantity']))
+                    precio_venta_unitario = Decimal(str(item_data['price']))
                     
+                    # Obtenemos lotes ordenados por fecha de vencimiento (First Expired, First Out)
                     lotes_disponibles = Lote.objects.filter(
                         producto=producto,
                         cantidad_actual__gt=0
                     ).order_by('fecha_vencimiento')
 
-                    costo_total_ponderado = Decimal('0.0')
+                    costo_total_ponderado = Decimal('0.00')
+                    cantidad_inicial_necesaria = cantidad_a_vender
                     
                     for lote in lotes_disponibles:
                         if cantidad_a_vender <= 0: break
+                        
+                        # Tomamos lo que necesitamos o lo que haya en el lote
                         cantidad_a_descontar = min(cantidad_a_vender, lote.cantidad_actual)
+                        
+                        # Actualizamos el lote
                         lote.cantidad_actual -= cantidad_a_descontar
                         lote.save()
+                        
+                        # Acumulamos el costo para el promedio ponderado
                         costo_total_ponderado += cantidad_a_descontar * lote.precio_compra
                         cantidad_a_vender -= cantidad_a_descontar
                     
-                    precio_compra_promedio = costo_total_ponderado / Decimal(str(item_data['quantity']))
+                    # Calculamos el precio de compra promedio de las unidades vendidas
+                    precio_compra_promedio = costo_total_ponderado / cantidad_inicial_necesaria
 
+                    # Creamos el detalle de la venta
                     DetalleVenta.objects.create(
                         venta=venta,
                         producto=producto,
-                        cantidad=item_data['quantity'],
-                        precio_unitario_momento=item_data['price'],
+                        cantidad=cantidad_inicial_necesaria,
+                        precio_unitario_momento=precio_venta_unitario,
                         precio_compra_momento=precio_compra_promedio,
+                        # El subtotal se calcula automáticamente en el save() del modelo DetalleVenta
                     )
             
+            # Renderizamos el ticket actualizado para el modal
             modal_html = render_to_string(
                 'ventas/partials/ticket_modal.html',
                 {'venta': venta}
@@ -126,8 +161,9 @@ class POSView(LoginRequiredMixin, ListView):
         except ValueError as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': f'Ocurrió un error inesperado: {str(e)}'}, status=500)
-
+            # Es bueno registrar el error real en consola para debugging
+            print(f"Error inesperado en POS: {e}")
+            return JsonResponse({'status': 'error', 'message': f'Ocurrió un error inesperado al procesar la venta.'}, status=500)
 def buscar_clientes(request):
     term = request.GET.get('term', '')
     clientes = Cliente.objects.filter(

@@ -2,6 +2,7 @@
     <h5 class="modal-title">Venta #{{ venta.id }} Registrada</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
+
 <div class="modal-body" id="ticket-to-print">
     <div class="text-center mb-4">
         <h4>Resumen de la Venta</h4>
@@ -9,6 +10,7 @@
         <p class="mb-0"><strong>Vendedor:</strong> {{ venta.vendedor.nombre_completo }}</p>
         <p><strong>Cliente:</strong> {{ venta.cliente.usuario.nombre_completo|default:"Consumidor Final" }}</p>
     </div>
+    
     <table class="table table-sm">
         <thead>
             <tr>
@@ -29,12 +31,25 @@
             {% endfor %}
         </tbody>
     </table>
+    
     <hr>
+    
+    <div class="d-flex justify-content-end mb-1">
+        <span>Subtotal: ${{ venta.total|add:venta.descuento|floatformat:2 }}</span>
+    </div>
+
+    {% if venta.descuento > 0 %}
+    <div class="d-flex justify-content-end text-danger mb-2">
+        <span>Descuento: -${{ venta.descuento|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+    
     <div class="d-flex justify-content-end">
         <h4>Total: ${{ venta.total|floatformat:2 }}</h4>
     </div>
-    <p class="text-center small mt-3">¡Gracias por su compra!</p>
+    <p class="text-center small mt-4">¡Gracias por su compra!</p>
 </div>
+
 <div class="modal-footer">
     <button type="button" class="btn btn-secondary" id="new-sale-btn">Nueva Venta</button>
     <button type="button" class="btn btn-primary" id="print-ticket-btn">Imprimir Ticket</button>
