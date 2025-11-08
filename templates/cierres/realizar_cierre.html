@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
-{% load l10n %} {% block title %}Realizar Cierre de Caja{% endblock title %}
+{% load l10n %} 
+
+{% block title %}Realizar Cierre de Caja{% endblock title %}
 
 {% block content %}
 <div class="container">
@@ -110,58 +112,111 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td colspan="7" class="p-0">
+                                    <td colspan="7" class="p-0 border-0">
                                         <div class="collapse" id="collapse-{{ cierre.id }}">
-                                            <div class="p-3 bg-light border-top">
-                                                <h5>Detalle del Cierre #{{ cierre.id }}</h5>
+                                            <div class="p-3 bg-white border-bottom">
                                                 
-                                                <h6>Desglose por Método de Pago:</h6>
-                                                <table class="table table-sm table-striped table-bordered mt-2">
-                                                    <thead class="thead-dark">
-                                                        <tr>
-                                                            <th>Método de Pago</th>
-                                                            <th>Monto Sistema</th>
-                                                            <th>Monto Arqueo</th>
-                                                            <th>Diferencia</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {% for detalle in cierre.detalles.all %}
-                                                        <tr>
-                                                            <td>{{ detalle.metodo_pago.nombre }}</td>
-                                                            <td>${{ detalle.monto_sistema|floatformat:2 }}</td>
-                                                            <td>${{ detalle.monto_arqueo|floatformat:2 }}</td>
-                                                            <td>
-                                                                <span class="{% if detalle.diferencia > 0 %}text-success{% elif detalle.diferencia < 0 %}text-danger{% endif %}">
-                                                                    ${{ detalle.diferencia|floatformat:"+2" }}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                        {% endfor %}
-                                                    </tbody>
-                                                </table>
-                                                
-                                                <h6 class="mt-3">Observaciones:</h6>
-                                                <p class="mb-0">
-                                                    {{ cierre.observaciones|default:"Sin observaciones."|linebreaksbr }}
-                                                </p>
-                                            </div>
+                                                <ul class="nav nav-tabs mb-3" id="cierreTabs-{{ cierre.id }}" role="tablist">
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link active" id="resumen-tab-{{ cierre.id }}" data-bs-toggle="tab" data-bs-target="#resumen-{{ cierre.id }}" type="button" role="tab" aria-selected="true">
+                                                            📊 Resumen y Arqueo
+                                                        </button>
+                                                    </li>
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link" id="ventas-tab-{{ cierre.id }}" data-bs-toggle="tab" data-bs-target="#ventas-{{ cierre.id }}" type="button" role="tab" aria-selected="false">
+                                                            🧾 Tickets / Ventas ({{ cierre.ventas_incluidas.count }})
+                                                        </button>
+                                                    </li>
+                                                </ul>
+
+                                                <div class="tab-content" id="cierreTabsContent-{{ cierre.id }}">
+                                                    
+                                                    <div class="tab-pane fade show active" id="resumen-{{ cierre.id }}" role="tabpanel">
+                                                        <h6 class="text-primary">Desglose por Método de Pago:</h6>
+                                                        <table class="table table-sm table-striped table-bordered mt-2" style="max-width: 600px;">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th>Método</th>
+                                                                    <th class="text-end">Sistema</th>
+                                                                    <th class="text-end">Arqueo (Real)</th>
+                                                                    <th class="text-end">Diferencia</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for detalle in cierre.detalles.all %}
+                                                                <tr>
+                                                                    <td>{{ detalle.metodo_pago.nombre }}</td>
+                                                                    <td class="text-end">${{ detalle.monto_sistema|floatformat:2 }}</td>
+                                                                    <td class="text-end">${{ detalle.monto_arqueo|floatformat:2 }}</td>
+                                                                    <td class="text-end">
+                                                                        <span class="fw-bold {% if detalle.diferencia > 0 %}text-success{% elif detalle.diferencia < 0 %}text-danger{% endif %}">
+                                                                            ${{ detalle.diferencia|floatformat:"+2" }}
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                        <div class="mt-3">
+                                                            <strong>Observaciones:</strong>
+                                                            <p class="text-muted fst-italic bg-light p-2 rounded border">
+                                                                {{ cierre.observaciones|default:"Sin observaciones registradas."|linebreaksbr }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="tab-pane fade" id="ventas-{{ cierre.id }}" role="tabpanel">
+                                                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                                            <table class="table table-sm table-hover align-middle">
+                                                                <thead class="table-light sticky-top">
+                                                                    <tr>
+                                                                        <th>ID Venta</th>
+                                                                        <th>Hora</th>
+                                                                        <th>Vendedor</th>
+                                                                        <th>Método Pago</th>
+                                                                        <th class="text-end">Total</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {% for venta in cierre.ventas_incluidas.all %}
+                                                                    <tr>
+                                                                        <td>#{{ venta.id }}</td>
+                                                                        <td>{{ venta.fecha_hora|date:"H:i" }} hs</td>
+                                                                        <td>{{ venta.vendedor.username|default:"-" }}</td>
+                                                                        <td>
+                                                                            <span class="badge bg-secondary">{{ venta.metodo_pago.nombre }}</span>
+                                                                        </td>
+                                                                        <td class="text-end fw-bold">${{ venta.total|floatformat:2 }}</td>
+                                                                    </tr>
+                                                                    {% empty %}
+                                                                    <tr>
+                                                                        <td colspan="5" class="text-center text-muted py-3">
+                                                                            No se encontraron ventas asociadas a este cierre.
+                                                                        </td>
+                                                                    </tr>
+                                                                    {% endfor %}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
+                                                </div> </div>
                                         </div>
                                     </td>
                                 </tr>
-                                
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center">
+                                    <td colspan="7" class="text-center py-4">
                                         No hay cierres de caja en el historial.
                                     </td>
                                 </tr>
-                                {% endfor %} </tbody>
+                                {% endfor %} 
+                            </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    </div>
+</div>
 {% endblock content %}

@@ -62,7 +62,10 @@ class RealizarCierreView(LoginRequiredMixin, View):
         historial_cierres = CierreCaja.objects.prefetch_related(
             'usuario', 
             'detalles', 
-            'detalles__metodo_pago'
+            'detalles__metodo_pago',
+            'ventas_incluidas',                # <-- NUEVO
+            'ventas_incluidas__vendedor',      # <-- NUEVO (para mostrar quién vendió)
+            'ventas_incluidas__metodo_pago',    # <-- NUEVO (para mostrar el método de pago)
         ).all()
 
         # --- 3. Preparación del Contexto para la Plantilla ---
