@@ -3,104 +3,122 @@
 {% block title %}Dashboard - StockPro{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">Dashboard Principal</h1>
-    
-    <div class="row">
-        <div class="col-lg-6 mb-4 d-flex">
-            <div class="card w-100">
-                <div class="card-body">
-                    <h5 class="card-title">Ventas del Día</h5>
-                    <p class="card-text fs-2">${{ ventas_dia }}</p>
+<h1 class="mb-4">Dashboard Principal</h1>
+
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card border-primary shadow h-100 py-2">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title text-primary">Gestión de Finanzas</h5>
+                    <p class="card-text text-muted mb-0">Revisa el rendimiento, ingresos, gastos y rentabilidad.</p>
                 </div>
+                <a href="{% url 'finanzas_app:dashboard' %}" class="btn btn-primary btn-lg shadow-sm">
+                    <i class="fas fa-chart-line me-2"></i> Ir a Finanzas
+                </a>
             </div>
         </div>
-        <div class="col-lg-6 mb-4 d-flex">
-            <div class="card w-100">
-                <div class="card-body">
-                    <h5 class="card-title">Cantidad de Ventas</h5>
-                    <p class="card-text fs-2">{{ cantidad_ventas }}</p>
-                </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4 d-flex">
+        <div class="card w-100">
+            <div class="card-body">
+                <h5 class="card-title">Ventas del Día</h5>
+                <p class="card-text fs-2">${{ ventas_dia }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4 d-flex">
+        <div class="card w-100">
+            <div class="card-body">
+                <h5 class="card-title">Cantidad de Ventas</h5>
+                <p class="card-text fs-2">{{ cantidad_ventas }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4 d-flex">
+        <div class="card border-danger w-100">
+            <div class="card-header bg-danger text-white">Alertas de Stock Bajo</div>
+            <div class="card-body">
+                {% if productos_bajos_stock %}
+                <ul class="list-group list-group-flush">
+                    {% for producto in productos_bajos_stock %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ producto.nombre }}
+                        <span class="badge bg-warning text-dark">
+                            Stock: {{ producto.stock_calculado|floatformat:2 }} / Mín: {{
+                            producto.stock_minimo|floatformat:2 }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}<p class="text-muted mb-0">No hay productos con bajo stock.</p>{% endif %}
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-6 mb-4 d-flex">
-            <div class="card border-danger w-100">
-                <div class="card-header bg-danger text-white">Alertas de Stock Bajo</div>
-                <div class="card-body">
-                    {% if productos_bajos_stock %}
-                        <ul class="list-group list-group-flush">
-                        {% for producto in productos_bajos_stock %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ producto.nombre }}
-                                <span class="badge bg-warning text-dark">
-                                    Stock: {{ producto.stock_calculado|floatformat:2 }} / Mín: {{ producto.stock_minimo|floatformat:2 }}
-                                </span>
-                            </li>
-                        {% endfor %}
-                        </ul>
-                    {% else %}<p class="text-muted mb-0">No hay productos con bajo stock.</p>{% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6 mb-4 d-flex">
-            <div class="card border-warning w-100">
-                <div class="card-header bg-warning text-dark">Alertas de Vencimiento (Próximos 7 días)</div>
-                <div class="card-body">
-                    {% if lotes_por_vencer %}
-                        <ul class="list-group list-group-flush">
-                        {% for lote in lotes_por_vencer %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ lote.producto.nombre }}</strong><br>
-                                    <small>Cant: {{ lote.cantidad_actual|floatformat:2 }} {{ lote.producto.unidad_medida.abreviatura }}</small>
-                                </div>
-                                <span class="badge bg-danger">
-                                    Vence: {{ lote.fecha_vencimiento|date:"d/m/Y" }}
-                                </span>
-                            </li>
-                        {% endfor %}
-                        </ul>
-                    {% else %}<p class="text-muted mb-0">No hay productos por vencer pronto.</p>{% endif %}
-                </div>
+    <div class="col-lg-6 mb-4 d-flex">
+        <div class="card border-warning w-100">
+            <div class="card-header bg-warning text-dark">Alertas de Vencimiento (Próximos 7 días)</div>
+            <div class="card-body">
+                {% if lotes_por_vencer %}
+                <ul class="list-group list-group-flush">
+                    {% for lote in lotes_por_vencer %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ lote.producto.nombre }}</strong><br>
+                            <small>Cant: {{ lote.cantidad_actual|floatformat:2 }} {{
+                                lote.producto.unidad_medida.abreviatura }}</small>
+                        </div>
+                        <span class="badge bg-danger">
+                            Vence: {{ lote.fecha_vencimiento|date:"d/m/Y" }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}<p class="text-muted mb-0">No hay productos por vencer pronto.</p>{% endif %}
             </div>
         </div>
     </div>
-    
-    <div class="row">
-        <div class="col-lg-6 mb-4 d-flex">
-            <div class="card border-dark w-100">
-                <div class="card-header bg-dark text-white">Lotes Vencidos (Acción Requerida)</div>
-                <div class="card-body">
-                    {% if lotes_vencidos %}
-                        <ul class="list-group list-group-flush">
-                        {% for lote in lotes_vencidos %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ lote.producto.nombre }}
-                                <span class="badge bg-secondary">Venció: {{ lote.fecha_vencimiento|date:"d/m/Y" }}</span>
-                            </li>
-                        {% endfor %}
-                        </ul>
-                    {% else %}<p class="text-muted mb-0">No hay lotes vencidos.</p>{% endif %}
-                </div>
-            </div>
-        </div>
+</div>
 
-        <div class="col-lg-6 mb-4 d-flex">
-            <div class="card border-info w-100">
-                <div class="card-header bg-info text-white">Productos sin Stock</div>
-                <div class="card-body">
-                    {% if productos_sin_lotes %}
-                        <ul class="list-group list-group-flush">
-                        {% for producto in productos_sin_lotes %}
-                            <li class="list-group-item">{{ producto.nombre }}</li>
-                        {% endfor %}
-                        </ul>
-                    {% else %}<p class="text-muted mb-0">Todos los productos tienen stock cargado.</p>{% endif %}
-                </div>
+<div class="row">
+    <div class="col-lg-6 mb-4 d-flex">
+        <div class="card border-dark w-100">
+            <div class="card-header bg-dark text-white">Lotes Vencidos (Acción Requerida)</div>
+            <div class="card-body">
+                {% if lotes_vencidos %}
+                <ul class="list-group list-group-flush">
+                    {% for lote in lotes_vencidos %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ lote.producto.nombre }}
+                        <span class="badge bg-secondary">Venció: {{ lote.fecha_vencimiento|date:"d/m/Y" }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}<p class="text-muted mb-0">No hay lotes vencidos.</p>{% endif %}
             </div>
         </div>
     </div>
+
+    <div class="col-lg-6 mb-4 d-flex">
+        <div class="card border-info w-100">
+            <div class="card-header bg-info text-white">Productos sin Stock</div>
+            <div class="card-body">
+                {% if productos_sin_lotes %}
+                <ul class="list-group list-group-flush">
+                    {% for producto in productos_sin_lotes %}
+                    <li class="list-group-item">{{ producto.nombre }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}<p class="text-muted mb-0">Todos los productos tienen stock cargado.</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
