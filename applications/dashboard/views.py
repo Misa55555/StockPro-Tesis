@@ -6,9 +6,13 @@ from django.http import HttpResponseForbidden
 from django.db.models import Sum, F, Count, DecimalField
 from django.db.models.functions import Coalesce
 from django.utils import timezone
-from datetime import timedelta
+# <--- CAMBIO 1: Importamos datetime y time
+from datetime import timedelta, datetime, time
 
 from applications.stock.models import Producto, Lote
+# <--- CAMBIO 2: Importamos el modelo Venta
+from applications.ventas.models import Venta
+
 
 @login_required
 def dashboard_view(request):
@@ -18,14 +22,34 @@ def dashboard_view(request):
     rol_usuario = request.user.rol.nombre
 
     if rol_usuario in ['Administrador', 'Vendedor']:
-        
-        # --- INICIO DE LA CORRECCIÓN ---
+
+        # --- CAMBIO 3: CÁLCULO DE VENTAS DEL DÍA ---
+        hoy = timezone.now().date()
+        # Define el rango del día actual (desde 00:00:00 hasta 23:59:59.999999 en el timezone configurado)
+        start_of_day = timezone.make_aware(datetime.combine(hoy, time.min))
+        end_of_day = timezone.make_aware(datetime.combine(hoy, time.max))
+
+        # Filtra las ventas para el rango de hoy
+        ventas_hoy_qs = Venta.objects.filter(
+            fecha_hora__range=(start_of_day, end_of_day)
+        )
+
+        # Calcula la suma total de las ventas (Venta del Día)
+        ventas_dia = ventas_hoy_qs.aggregate(
+            total=Coalesce(Sum('total'), 0, output_field=DecimalField())
+        )['total']
+
+        # Calcula la cantidad de transacciones (Cant. de Ventas)
+        cantidad_ventas = ventas_hoy_qs.count()
+        # --- FIN CÁLCULO DE VENTAS DEL DÍA ---
+
         # 1. Primero, obtenemos solo los productos ACTIVOS para las alertas de stock.
         productos_activos = Producto.objects.filter(is_active=True)
 
         # 2. Construimos la consulta de stock a partir de los productos activos.
         productos_con_stock = productos_activos.annotate(
-            stock_total=Coalesce(Sum('lotes__cantidad_actual'), 0, output_field=DecimalField())
+            stock_total=Coalesce(Sum('lotes__cantidad_actual'),
+                                 0, output_field=DecimalField())
         )
         # --- FIN DE LA CORRECCIÓN ---
 
@@ -37,7 +61,7 @@ def dashboard_view(request):
 
         # Alerta 2: Productos sin Stock (ahora solo de productos activos)
         productos_sin_lotes = productos_con_stock.filter(stock_total=0)
-        
+
         hoy = timezone.now().date()
         proxima_semana = hoy + timedelta(days=7)
 
@@ -52,8 +76,8 @@ def dashboard_view(request):
         ).select_related('producto')
 
         context = {
-            'ventas_dia': 0,
-            'cantidad_ventas': 0,
+            'ventas_dia': ventas_dia,         # <--- Se pasa el valor calculado
+            'cantidad_ventas': cantidad_ventas,  # <--- Se pasa el valor calculado
             'productos_bajos_stock': productos_bajos_stock,
             'lotes_por_vencer': lotes_por_vencer,
             'lotes_vencidos': lotes_vencidos,

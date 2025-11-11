@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load l10n %}
+{# El tag l10n es útil si quieres usar el formato local de números/decimales #}
 
 {% block title %}Dashboard - StockPro{% endblock %}
 
@@ -23,18 +25,20 @@
 
 <div class="row">
     <div class="col-lg-6 mb-4 d-flex">
-        <div class="card w-100">
+        <div class="card border-left-success w-100">
             <div class="card-body">
                 <h5 class="card-title">Ventas del Día</h5>
-                <p class="card-text fs-2">${{ ventas_dia }}</p>
+                {# Usamos floatformat:2 para el formato de moneda #}
+                <p class="card-text fs-2 fw-bold text-success">${{ ventas_dia|floatformat:2 }}</p>
             </div>
         </div>
     </div>
     <div class="col-lg-6 mb-4 d-flex">
-        <div class="card w-100">
+        <div class="card border-left-primary w-100">
             <div class="card-body">
                 <h5 class="card-title">Cantidad de Ventas</h5>
-                <p class="card-text fs-2">{{ cantidad_ventas }}</p>
+                {# No usamos floatformat para mostrar el número de tickets/ventas como entero #}
+                <p class="card-text fs-2 fw-bold">{{ cantidad_ventas }}</p>
             </div>
         </div>
     </div>
