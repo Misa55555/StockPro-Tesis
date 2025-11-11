@@ -51,8 +51,7 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         {{ producto.nombre }}
                         <span class="badge bg-warning text-dark">
-                            Stock: {{ producto.stock_calculado|floatformat:2 }} / Mín: {{
-                            producto.stock_minimo|floatformat:2 }}
+                            Stock: {{ producto.stock_calculado|floatformat:2 }} / Mín: {{producto.stock_minimo|floatformat:2 }}
                         </span>
                     </li>
                     {% endfor %}
