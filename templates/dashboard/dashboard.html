@@ -71,8 +71,7 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
                             <strong>{{ lote.producto.nombre }}</strong><br>
-                            <small>Cant: {{ lote.cantidad_actual|floatformat:2 }} {{
-                                lote.producto.unidad_medida.abreviatura }}</small>
+                            <small>Cant: {{ lote.cantidad_actual|floatformat:2 }} {{lote.producto.unidad_medida.abreviatura }}</small>
                         </div>
                         <span class="badge bg-danger">
                             Vence: {{ lote.fecha_vencimiento|date:"d/m/Y" }}
