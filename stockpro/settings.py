@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'applications.usuarios',
     'applications.stock',
     'applications.ventas', 
-    'applications.pedidos',
     'applications.cierres',
     'applications.dashboard',
     'applications.finanzas',

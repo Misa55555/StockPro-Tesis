@@ -123,5 +123,3 @@ class LoteForm(forms.ModelForm):
             raise ValidationError("La cantidad debe ser un número mayor que cero.")
         return cantidad
     
-class UploadFileForm(forms.Form):
-    file = forms.FileField(label="Selecciona tu archivo Excel (.xlsx)")

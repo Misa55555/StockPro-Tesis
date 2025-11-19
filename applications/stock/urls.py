@@ -27,7 +27,6 @@ urlpatterns = [
     # URLs de Lotes y Reportes
     path('stock/cargar-lote/', views.CargarLoteView.as_view(), name='cargar_lote'),
     path('stock/exportar-excel/', views.exportar_stock_excel, name='exportar_stock_excel'),
-    path('stock/importar-excel/', views.ImportarProductosView.as_view(), name='importar_stock_excel'),
     path('api/producto/details/', views.get_producto_details, name='api_product_details'),
     path('stock/lote/delete/<int:pk>/', views.lote_delete, name='lote_delete'),
     
