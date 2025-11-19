@@ -1,0 +1,130 @@
+/* static/css/custom.css */
+
+/* 1. Fuente Moderna (Inter es excelente para interfaces) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; /* Gris muy suave de fondo, mejor que el blanco puro */
+    color: #374151; /* Texto gris oscuro, menos agresivo que el negro puro */
+}
+
+/* 2. Mejoras en la Barra de Navegación */
+.navbar {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); /* Coincide con tu login */
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 1.4rem;
+}
+
+/* 3. Tarjetas (Cards) Modernas */
+.card {
+    border: none; /* Quitamos el borde gris feo */
+    border-radius: 12px; /* Bordes más redondeados */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); /* Sombra suave */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-bottom: 1.5rem;
+}
+
+/* Efecto hover solo en tarjetas que sean interactivas o KPIs */
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid #f3f4f6;
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* 4. Botones Más Estéticos */
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: #3b82f6; /* Azul más moderno */
+    border-color: #3b82f6;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-success {
+    background-color: #10b981; /* Verde esmeralda */
+    border-color: #10b981;
+}
+
+.btn-danger {
+    background-color: #ef4444;
+    border-color: #ef4444;
+}
+
+/* 5. Tablas Limpias */
+.table-responsive {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 1rem;
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f9fafb; /* Hover muy sutil */
+}
+
+/* 6. Formularios (Input Fields) */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    padding: 0.6rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* 7. Badges (Etiquetas de estado) */
+.badge {
+    padding: 0.5em 0.8em;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* Título de página */
+h1 {
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+}

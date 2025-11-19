@@ -8,7 +8,9 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from datetime import timedelta
 
+# --- Importamos los modelos necesarios ---
 from applications.stock.models import Producto, Lote
+from applications.ventas.models import Venta  # <--- IMPORTANTE: Importar el modelo Venta
 
 @login_required
 def dashboard_view(request):
@@ -19,41 +21,53 @@ def dashboard_view(request):
 
     if rol_usuario in ['Administrador', 'Vendedor']:
         
-        # --- INICIO DE LA CORRECCIÓN ---
-        # 1. Primero, obtenemos solo los productos ACTIVOS para las alertas de stock.
+        # --- 1. LÓGICA DE STOCK (Alertas) ---
         productos_activos = Producto.objects.filter(is_active=True)
 
-        # 2. Construimos la consulta de stock a partir de los productos activos.
         productos_con_stock = productos_activos.annotate(
             stock_total=Coalesce(Sum('lotes__cantidad_actual'), 0, output_field=DecimalField())
         )
-        # --- FIN DE LA CORRECCIÓN ---
 
-        # Alerta 1: Productos con Stock Bajo (ahora solo de productos activos)
+        # Alerta 1: Productos con Stock Bajo
         productos_bajos_stock = productos_con_stock.filter(
             stock_total__gt=0,
             stock_total__lte=F('stock_minimo')
         )
 
-        # Alerta 2: Productos sin Stock (ahora solo de productos activos)
+        # Alerta 2: Productos sin Stock
         productos_sin_lotes = productos_con_stock.filter(stock_total=0)
         
         hoy = timezone.now().date()
         proxima_semana = hoy + timedelta(days=7)
 
-        # Alertas de Vencimiento (estas NO cambian, siguen revisando todos los lotes)
+        # Alertas de Vencimiento
         lotes_por_vencer = Lote.objects.filter(
             fecha_vencimiento__gte=hoy,
-            fecha_vencimiento__lte=proxima_semana
+            fecha_vencimiento__lte=proxima_semana,
+            cantidad_actual__gt=0  # Solo lotes que aún tengan stock
         ).select_related('producto')
 
         lotes_vencidos = Lote.objects.filter(
-            fecha_vencimiento__lt=hoy
+            fecha_vencimiento__lt=hoy,
+            cantidad_actual__gt=0
         ).select_related('producto')
 
+        # --- 2. LÓGICA DE VENTAS DEL DÍA (Corrección) ---
+        # Filtramos todas las ventas cuya fecha coincida con hoy
+        ventas_de_hoy = Venta.objects.filter(fecha_hora__date=hoy)
+
+        # Calculamos la suma total de dinero (campo 'total')
+        # Si no hay ventas, aggregate devuelve None, por eso usamos 'or 0'
+        total_ventas_dia = ventas_de_hoy.aggregate(total=Sum('total'))['total'] or 0
+
+        # Contamos la cantidad de registros (tickets)
+        cantidad_ventas_dia = ventas_de_hoy.count()
+
         context = {
-            'ventas_dia': 0,
-            'cantidad_ventas': 0,
+            # Pasamos los datos reales al contexto
+            'ventas_dia': total_ventas_dia, 
+            'cantidad_ventas': cantidad_ventas_dia,
+            
             'productos_bajos_stock': productos_bajos_stock,
             'lotes_por_vencer': lotes_por_vencer,
             'lotes_vencidos': lotes_vencidos,
