@@ -50,10 +50,9 @@ class ProductoForm(forms.ModelForm):
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
-        fields = ['nombre', 'es_visible_online']
+        fields = ['nombre']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'es_visible_online': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 class MarcaForm(forms.ModelForm):
