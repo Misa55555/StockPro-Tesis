@@ -316,4 +316,6 @@ Este proyecto fue desarrollado como trabajo final de tesis. Todos los derechos r
 
 Para consultas sobre el proyecto, contacta a través del repositorio o correo electrónico de los autores
 misa132456@gmail.com
+valenmarta17@gmail.com
+facundomalaraaa@gmail.com
 
