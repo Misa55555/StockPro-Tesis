@@ -122,3 +122,15 @@ class LoteForm(forms.ModelForm):
             raise ValidationError("La cantidad debe ser un número mayor que cero.")
         return cantidad
     
+class ActualizarPrecioMarcaForm(forms.Form):
+    porcentaje = forms.DecimalField(
+        label="Porcentaje de Ajuste (%)",
+        max_digits=5, 
+        decimal_places=2,
+        help_text="Ingresa un valor positivo para aumentar (ej. 15) o negativo para descontar (ej. -10).",
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Ej: 10.5',
+            'step': '0.01'
+        })
+    )

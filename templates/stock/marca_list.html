@@ -41,6 +41,14 @@
                         {% endif %}
                     </td>
                     <td class="text-end">
+                        {% if marca.is_active %}
+                        <button class="btn btn-sm btn-info text-white me-1" 
+                                onclick="openModal('{% url 'stock_app:marca_update_prices' marca.pk %}')"
+                                title="Aumentar/Descontar Precios en Lote">
+                            <i class="fas fa-percentage"></i>
+                        </button>
+                        {% endif %}
+
                         <button class="btn btn-sm btn-warning" onclick="openModal('{% url 'stock_app:marca_edit' marca.pk %}')">
                             Editar
                         </button>

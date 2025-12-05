@@ -23,6 +23,7 @@ urlpatterns = [
     path('marcas/add/', views.MarcaCreateView.as_view(), name='marca_add'),
     path('marcas/edit/<int:pk>/', views.MarcaUpdateView.as_view(), name='marca_edit'),
     path('marcas/delete/<int:pk>/', views.MarcaDeleteView.as_view(), name='marca_delete'),
+    path('marcas/update-prices/<int:pk>/', views.marca_update_prices, name='marca_update_prices'),
 
     # URLs de Lotes y Reportes
     path('stock/cargar-lote/', views.CargarLoteView.as_view(), name='cargar_lote'),

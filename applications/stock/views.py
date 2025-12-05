@@ -7,7 +7,7 @@ import openpyxl
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction, IntegrityError # <--- IMPORTANTE: Importar IntegrityError
 from django.utils import timezone
-
+from .forms import ActualizarPrecioMarcaForm # Asegúrate de importar el nuevo form
 from .filters import ProductFilter
 # Importamos TODOS los modelos
 from .models import Producto, Categoria, Marca, UnidadMedida, Lote
@@ -291,3 +291,47 @@ def get_producto_details(request):
         except Producto.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Producto no encontrado'}, status=404)
     return JsonResponse({'status': 'error', 'message': 'Falta ID'}, status=400)
+
+
+
+
+def marca_update_prices(request, pk):
+    marca = get_object_or_404(Marca, pk=pk)
+    
+    if request.method == 'POST':
+        form = ActualizarPrecioMarcaForm(request.POST)
+        if form.is_valid():
+            porcentaje = form.cleaned_data['porcentaje']
+            
+            # Convertimos el porcentaje a un factor multiplicador
+            # Ej: 10% -> 1.10 | -10% -> 0.90
+            factor = 1 + (porcentaje / 100)
+            
+            productos = Producto.objects.filter(marca=marca, is_active=True)
+            count = 0
+            
+            try:
+                with transaction.atomic():
+                    for producto in productos:
+                        # Calculamos nuevo precio
+                        nuevo_precio = producto.precio_venta * factor
+                        # Redondeamos a 2 decimales (como pediste)
+                        producto.precio_venta = round(nuevo_precio, 2)
+                        producto.save()
+                        count += 1
+                
+                messages.success(request, f'Se actualizaron los precios de {count} productos de "{marca.nombre}" correctamente.')
+                # Cerramos el modal redirigiendo a la lista (el script JS recargará)
+                return redirect('stock_app:marca_list')
+                
+            except Exception as e:
+                messages.error(request, f'Error al actualizar precios: {str(e)}')
+    else:
+        form = ActualizarPrecioMarcaForm()
+
+    context = {
+        'form': form, 
+        'marca': marca,
+        'cantidad_productos': Producto.objects.filter(marca=marca, is_active=True).count()
+    }
+    return render(request, 'stock/partials/marca_update_prices.html', context)
