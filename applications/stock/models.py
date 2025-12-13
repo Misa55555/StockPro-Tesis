@@ -16,10 +16,11 @@ from django.db.models import Sum
 
 class Marca(models.Model):
     """
-    Representa la marca de un producto (ej. Coca-Cola, Bimbo, Lays).
+    Representa la marca comercial de un producto (ej. Coca-Cola, Bimbo, Lays).
     
-    Este modelo permite agrupar productos bajo un mismo fabricante, facilitando
-    la búsqueda, la generación de reportes y la gestión de inventario.
+    Este modelo permite agrupar productos bajo un mismo fabricante o sello comercial,
+    facilitando la búsqueda, la generación de reportes segmentados y la gestión
+    organizada del inventario.
     """
     # Campo para el nombre único de la marca.
     nombre = models.CharField(
@@ -30,21 +31,21 @@ class Marca(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        """Metadatos para el modelo Marca."""
+        """Metadatos para la configuración del modelo Marca."""
         verbose_name = 'Marca'
         verbose_name_plural = 'Marcas'
-        ordering = ['nombre'] # Ordena las marcas alfabéticamente.
+        ordering = ['nombre'] # Ordena las marcas alfabéticamente para su visualización.
 
     def __str__(self):
-        """Representación en cadena de texto del objeto Marca."""
+        """Retorna la representación en cadena de texto del objeto Marca."""
         return self.nombre
 
 class UnidadMedida(models.Model):
     """
-    Define las unidades en que se miden los productos (ej. Unidad, Kilogramo, Litro).
+    Define las unidades de medida estandarizadas para los productos (ej. Unidad, Kilogramo, Litro).
     
-    Es un modelo crucial para la correcta gestión del stock fraccionable y para
-    estandarizar la forma en que se cuantifican los productos.
+    Es un modelo crucial para la correcta gestión del stock, especialmente para productos
+    fraccionables, y para estandarizar la cuantificación en los procesos de compra y venta.
     """
     # Nombre completo de la unidad de medida.
     nombre = models.CharField(
@@ -52,37 +53,36 @@ class UnidadMedida(models.Model):
         max_length=50,
         unique=True
     )
-    # Abreviatura estándar (ej. "un", "kg", "L").
+    # Abreviatura estándar (ej. "un", "kg", "L") para uso en interfaces compactas.
     abreviatura = models.CharField(
         'Abreviatura',
         max_length=10
     )
 
     class Meta:
-        """Metadatos para el modelo UnidadMedida."""
+        """Metadatos para la configuración del modelo UnidadMedida."""
         verbose_name = 'Unidad de Medida'
         verbose_name_plural = 'Unidades de Medida'
         ordering = ['nombre']
 
     def __str__(self):
-        """Representación en cadena de texto del objeto UnidadMedida."""
+        """Retorna la representación en cadena de texto del objeto UnidadMedida."""
         return self.nombre
 
 class Categoria(models.Model):
     """
-    Clasificación de los productos en categorías (ej. Bebidas, Lácteos, Panificados).
+    Clasificación lógica de los productos (ej. Bebidas, Lácteos, Panificados).
     
-    Este modelo es fundamental para la organización del inventario y la navegación
-    del cliente en el portal online, permitiendo filtrar y encontrar productos
-    de manera eficiente.
+    Este modelo es fundamental para la organización jerárquica del inventario y la
+    navegación en el catálogo, permitiendo filtrar y localizar productos de manera eficiente.
     """
-    # Nombre único de la categoría.
+    # Nombre único identificador de la categoría.
     nombre = models.CharField(
         'Nombre',
         max_length=100,
         unique=True
     )
-    # Campo booleano para controlar la visibilidad de la categoría en el portal de clientes.
+    # Control de visibilidad para canales digitales o catálogos públicos.
     es_visible_online = models.BooleanField(
         'Visible en portal cliente',
         default=True
@@ -90,24 +90,24 @@ class Categoria(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        """Metadatos para el modelo Categoria."""
+        """Metadatos para la configuración del modelo Categoria."""
         verbose_name = 'Categoría'
         verbose_name_plural = 'Categorías'
         ordering = ['nombre']
 
     def __str__(self):
-        """Representación en cadena de texto del objeto Categoria."""
+        """Retorna la representación en cadena de texto del objeto Categoria."""
         return self.nombre
 
 class Producto(models.Model):
     """
-    Entidad central del módulo de stock que representa un artículo vendible.
+    Entidad central del módulo de stock que representa un artículo comercializable.
     
-    Este modelo agrupa toda la información comercial y de gestión de un producto.
-    No almacena el stock directamente; en su lugar, el stock total se calcula
-    dinámicamente a partir de la suma de sus Lotes asociados.
+    Este modelo agrupa la información descriptiva, comercial y de clasificación del producto.
+    Es importante notar que no almacena el nivel de stock directamente; el stock total
+    se deriva dinámicamente de la agregación de los Lotes asociados activos.
     """
-    # Atributos comerciales y descriptivos del producto.
+    # Atributos descriptivos y comerciales.
     nombre = models.CharField('Nombre', max_length=200)
     descripcion = models.TextField('Descripción', blank=True)
     precio_venta = models.DecimalField('Precio de Venta', max_digits=10, decimal_places=2)
@@ -116,76 +116,79 @@ class Producto(models.Model):
     is_active = models.BooleanField(default=True)
     codigo_barras = models.CharField('Código de Barras', max_length=100, blank=True, null=True, unique=True)
 
-    # Relaciones con otros modelos para clasificar el producto.
+    # Relaciones de clasificación (Foreign Keys).
     categoria = models.ForeignKey(
         Categoria,
-        on_delete=models.SET_NULL, # Si se borra la categoría, este campo se pone nulo.
+        on_delete=models.SET_NULL, # Mantiene el producto aunque se elimine la categoría.
         null=True, blank=True, related_name='productos'
     )
     marca = models.ForeignKey(
         Marca,
-        on_delete=models.SET_NULL, # Si se borra la marca, este campo se pone nulo.
+        on_delete=models.SET_NULL, # Mantiene el producto aunque se elimine la marca.
         null=True, blank=True, related_name='productos'
     )
     unidad_medida = models.ForeignKey(
         UnidadMedida,
-        on_delete=models.PROTECT # Impide eliminar una Unidad de Medida si está en uso por un producto.
+        on_delete=models.PROTECT # Impide eliminar una unidad de medida si está en uso.
     )
 
     class Meta:
-        """Metadatos para el modelo Producto."""
+        """Metadatos para la configuración del modelo Producto."""
         verbose_name = 'Producto'
         verbose_name_plural = 'Productos'
         ordering = ['nombre']
 
     def get_stock_total(self):
         """
-        Calcula y retorna el stock total disponible para el producto.
+        Calcula y retorna el stock total físico disponible para el producto.
         
-        Este método realiza una consulta de agregación sobre los lotes asociados
-        para sumar sus cantidades actuales, proveyendo una única fuente de verdad
-        para el stock del producto en tiempo real.
+        Realiza una consulta de agregación sobre los lotes asociados para sumar
+        sus cantidades actuales ('cantidad_actual'). Provee la fuente de verdad
+        para el inventario en tiempo real.
+        
+        Returns:
+            Decimal: La suma total de las cantidades de los lotes. Retorna 0 si no hay lotes.
         """
-        # Utiliza el ORM de Django para sumar el campo 'cantidad_actual' de todos los lotes relacionados.
+        # Agregación mediante ORM de Django.
         total = self.lotes.aggregate(total_stock=Sum('cantidad_actual'))['total_stock']
-        # Retorna 0 si no hay lotes asociados para evitar un valor Nulo (None).
         return total if total is not None else 0
     
     def __str__(self):
-        """Representación en cadena de texto del objeto Producto."""
+        """Retorna el nombre del producto como su representación."""
         return self.nombre
 
 class Lote(models.Model):
     """
-    Representa una partida específica de un producto que ingresó al inventario.
+    Representa una partida específica de ingreso de mercadería al inventario.
     
-    Este modelo es la clave para la gestión de stock. Cada vez que se compra
-    mercadería de un producto, se crea un nuevo lote. Esto permite manejar
-    múltiples fechas de vencimiento para un mismo producto y llevar un
-    control preciso de las existencias.
+    Implementa el modelo de gestión de inventario por lotes, lo cual es esencial para:
+    1. Trazabilidad de ingresos.
+    2. Gestión de múltiples fechas de vencimiento para un mismo SKU (Stock Keeping Unit).
+    3. Cálculo de costos promedios o específicos (FIFO/LIFO).
     """
-    # Relación con el producto al que pertenece el lote.
+    # Relación con el producto padre.
     producto = models.ForeignKey(
         Producto,
-        on_delete=models.CASCADE, # Si se elimina el producto, se eliminan todos sus lotes.
+        on_delete=models.CASCADE, # Si se elimina el producto, se eliminan sus lotes.
         related_name='lotes'
     )
-    # Cantidad de unidades de este lote que quedan en stock.
+    # Stock remanente en este lote específico.
     cantidad_actual = models.DecimalField('Cantidad Actual', max_digits=10, decimal_places=3)
-    # Precio de compra del producto (opcional).
+    
+    # Datos económicos y de caducidad del lote.
     precio_compra = models.DecimalField('Precio de Compra del Lote', max_digits=10, decimal_places=2, default=0)
-    # Fecha de vencimiento del lote (opcional).
     fecha_vencimiento = models.DateField('Fecha de Vencimiento', null=True, blank=True)
-    # Fecha en que el lote fue registrado en el sistema (se establece automáticamente).
+    
+    # Auditoría de ingreso.
     fecha_ingreso = models.DateField(auto_now_add=True)
     
     class Meta:
-        """Metadatos para el modelo Lote."""
+        """Metadatos para la configuración del modelo Lote."""
         verbose_name = 'Lote'
         verbose_name_plural = 'Lotes'
-        # Ordena los lotes por fecha de vencimiento, para facilitar la gestión FIFO/FEFO.
+        # Ordenamiento por vencimiento para facilitar estrategias FEFO (First Expired, First Out).
         ordering = ['fecha_vencimiento']
 
     def __str__(self):
-        """Representación en cadena de texto del objeto Lote."""
+        """Retorna una descripción del lote incluyendo producto y vencimiento."""
         return f'Lote de {self.producto.nombre} - Vence: {self.fecha_vencimiento}'
