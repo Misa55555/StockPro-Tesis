@@ -1,4 +1,14 @@
 # applications/finanzas/views.py
+
+"""
+Módulo de Vistas para la aplicación 'finanzas'.
+
+Este archivo contiene la lógica de presentación y procesamiento de datos para el módulo
+de gestión financiera. Incluye vistas para la renderización del dashboard principal,
+endpoints de API para la alimentación de gráficos (Chart.js), procesamiento de formularios
+de gastos y la generación de reportes exportables en formato Excel.
+"""
+
 import json
 from datetime import datetime, date, time
 from django.utils import timezone
@@ -21,11 +31,25 @@ from applications.stock.models import Categoria as CategoriaProducto, Producto
 from .models import Gasto, CategoriaGasto
 from .forms import GastoForm, CategoriaGastoForm
 
-# VISTA 1: La que renderiza el HTML (Sin cambios)
+# VISTA 1: La que renderiza el HTML
 # ------------------------------------------------
 class DashboardFinanzasView(LoginRequiredMixin, TemplateView):
+    """
+    Vista basada en plantilla que renderiza la interfaz principal del Dashboard Financiero.
+
+    Se encarga de inicializar el contexto con los formularios necesarios para el registro
+    de gastos y categorías, así como establecer los rangos de fechas predeterminados
+    para la visualización inicial de los datos.
+    """
     template_name = 'finanzas/dashboard.html'
+    
     def get_context_data(self, **kwargs):
+        """
+        Prepara el contexto de datos para la plantilla.
+        
+        Inicializa las fechas de filtro (inicio de mes actual hasta hoy) e instancia
+        los formularios de registro de gastos y categorías para su uso en modales.
+        """
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Dashboard Financiero'
         today = timezone.now().date()
@@ -36,11 +60,25 @@ class DashboardFinanzasView(LoginRequiredMixin, TemplateView):
         return context
 
 
-# VISTA 2: La que provee los datos (JSON) (Sin cambios)
+# VISTA 2: La que provee los datos (JSON)
 # ------------------------------------------------
 class FinanzasDataJSONView(LoginRequiredMixin, View):
+    """
+    Vista de API que provee datos financieros en formato JSON.
+
+    Esta vista es consumida asíncronamente por el frontend para renderizar los gráficos
+    y actualizar los indicadores clave de rendimiento (KPIs) sin recargar la página.
+    Realiza cálculos agregados sobre ventas, costos y gastos en un rango de fechas específico.
+    """
     
     def get(self, request, *args, **kwargs):
+        """
+        Maneja las solicitudes GET para la obtención de datos financieros.
+
+        Procesa los parámetros de filtrado por fecha, calcula métricas de rentabilidad
+        (ingresos, COGS, beneficio neto) y estructura los datos para su visualización
+        en gráficos de líneas, barras y torta.
+        """
         
         # --- 1. Obtener y validar el rango de fechas ---
         try:
@@ -51,9 +89,11 @@ class FinanzasDataJSONView(LoginRequiredMixin, View):
             start_date_obj = datetime.strptime(start_date_str, '%Y-%m-%d').date()
             end_date_obj = datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
+            # Fechas para consultas de Gastos (DateField)
             start_date_for_gasto = start_date_obj
             end_date_for_gasto = end_date_obj
             
+            # Fechas para consultas de Ventas (DateTimeField - con manejo de zona horaria)
             start_dt_naive = datetime.combine(start_date_obj, time.min)
             end_dt_naive = datetime.combine(end_date_obj, time.max)
 
@@ -65,22 +105,28 @@ class FinanzasDataJSONView(LoginRequiredMixin, View):
 
         # --- 2. Calcular los KPIs Principales ---
         
-        # (Cálculos de KPIs - sin cambios)
+        # Cálculo de Ingresos Brutos (Suma total de ventas en el período)
         total_ingresos = Venta.objects.filter(
             fecha_hora__range=[start_date_aware, end_date_aware]
         ).aggregate(total=Sum('total'))['total'] or 0
+        
+        # Cálculo del Costo de Mercadería Vendida (COGS) basado en el costo histórico al momento de la venta
         total_cogs = DetalleVenta.objects.filter(
             venta__fecha_hora__range=[start_date_aware, end_date_aware]
         ).aggregate(total=Sum(F('cantidad') * F('precio_compra_momento')))['total'] or 0
+        
+        # Cálculo de Gastos Operativos imputados en el período
         total_gastos = Gasto.objects.filter(
             fecha_imputacion__range=[start_date_for_gasto, end_date_for_gasto]
         ).aggregate(total=Sum('monto'))['total'] or 0
+        
+        # Cálculo de Resultados
         ganancia_bruta = total_ingresos - total_cogs
         beneficio_neto = ganancia_bruta - total_gastos
 
         # --- 3. Preparar datos para los Gráficos (Torta y Líneas) ---
         
-        # (Gráfico Gastos por Categoría - sin cambios)
+        # Datos para Gráfico de Gastos por Categoría
         gastos_por_categoria_qs = CategoriaGasto.objects.filter(
             gasto__fecha_imputacion__range=[start_date_for_gasto, end_date_for_gasto]
         ).annotate(total=Sum('gasto__monto')).order_by('-total')
@@ -89,7 +135,7 @@ class FinanzasDataJSONView(LoginRequiredMixin, View):
             'data': [g.total for g in gastos_por_categoria_qs if g.total > 0],
         }
 
-        # (Gráfico Ventas por Categoría de Producto - sin cambios)
+        # Datos para Gráfico de Ventas por Categoría de Producto
         ventas_por_categoria_qs = CategoriaProducto.objects.filter(
             productos__detalleventa__venta__fecha_hora__range=[start_date_aware, end_date_aware]
         ).annotate(total_vendido=Sum('productos__detalleventa__subtotal')).order_by('-total_vendido')
@@ -98,27 +144,33 @@ class FinanzasDataJSONView(LoginRequiredMixin, View):
             'data': [c.total_vendido for c in ventas_por_categoria_qs if c.total_vendido > 0],
         }
 
-        # (Gráfico Evolución de Ganancias - sin cambios)
+        # Datos para Gráfico de Evolución Temporal (Ingresos vs Gastos diarios)
         ingresos_por_dia = Venta.objects.filter(
             fecha_hora__range=[start_date_aware, end_date_aware]
         ).annotate(dia=TruncDay('fecha_hora')).values('dia').annotate(total=Sum('total')).order_by('dia')
+        
         gastos_por_dia = Gasto.objects.filter(
             fecha_imputacion__range=[start_date_for_gasto, end_date_for_gasto]
         ).annotate(dia=TruncDay('fecha_imputacion')).values('dia').annotate(total=Sum('monto')).order_by('dia')
+        
+        # Normalización de series temporales para alinear fechas en el eje X
         ingresos_map = {d['dia'].strftime('%Y-%m-%d'): d['total'] for d in ingresos_por_dia}
         gastos_map = {d['dia'].strftime('%Y-%m-%d'): d['total'] for d in gastos_por_dia}
         all_labels = sorted(list(set(ingresos_map.keys()) | set(gastos_map.keys())))
+        
         chart_evolucion = {
             'labels': all_labels,
             'ingresos_data': [ingresos_map.get(label, 0) for label in all_labels],
             'gastos_data': [gastos_map.get(label, 0) for label in all_labels],
         }
 
-        # --- 4. Cálculos para Rankings (Paso 2) (Sin cambios) ---
+        # --- 4. Cálculos para Rankings (Top productos y vendedores) ---
         
         detalles_en_rango = DetalleVenta.objects.filter(
             venta__fecha_hora__range=[start_date_aware, end_date_aware]
         ).select_related('producto')
+        
+        # Top 5 Productos más vendidos por cantidad
         top_productos_venta_qs = detalles_en_rango.values(
             'producto__nombre'
         ).annotate(
@@ -128,6 +180,8 @@ class FinanzasDataJSONView(LoginRequiredMixin, View):
             'labels': [p['producto__nombre'] for p in top_productos_venta_qs],
             'data': [p['total_cantidad'] for p in top_productos_venta_qs],
         }
+        
+        # Top 5 Productos más rentables (Margen de ganancia)
         top_productos_rentables_qs = detalles_en_rango.annotate(
             ganancia_linea=F('subtotal') - (F('cantidad') * F('precio_compra_momento'))
         ).values('producto__nombre').annotate(
@@ -137,6 +191,8 @@ class FinanzasDataJSONView(LoginRequiredMixin, View):
             'labels': [p['producto__nombre'] for p in top_productos_rentables_qs],
             'data': [p['ganancia_total'] for p in top_productos_rentables_qs],
         }
+        
+        # Ventas acumuladas por Vendedor
         ventas_por_vendedor_qs = Venta.objects.filter(
             fecha_hora__range=[start_date_aware, end_date_aware]
         ).values('vendedor__username').annotate(
@@ -147,11 +203,13 @@ class FinanzasDataJSONView(LoginRequiredMixin, View):
             'data': [v['total_vendido'] for v in ventas_por_vendedor_qs],
         }
         
-        # --- 5. Análisis de Horarios (Paso 3) (Sin cambios) ---
+        # --- 5. Análisis de Horarios y Turnos ---
         
         base_ventas_rango = Venta.objects.filter(
             fecha_hora__range=[start_date_aware, end_date_aware]
         )
+        
+        # Distribución de ventas por hora del día
         ventas_por_hora_qs = base_ventas_rango.annotate(
             hora=ExtractHour('fecha_hora')
         ).values('hora').annotate(
@@ -164,6 +222,8 @@ class FinanzasDataJSONView(LoginRequiredMixin, View):
             'labels': list(ventas_por_hora_map.keys()),
             'data': list(ventas_por_hora_map.values()),
         }
+        
+        # Distribución de ventas por turno (Mañana, Tarde, Noche)
         ventas_por_turno_qs = base_ventas_rango.annotate(
             hora=ExtractHour('fecha_hora')
         ).annotate(
@@ -192,9 +252,16 @@ class FinanzasDataJSONView(LoginRequiredMixin, View):
         return JsonResponse(data)
 
 
-# VISTA 3: La que guarda el gasto (Sin cambios)
+# VISTA 3: La que guarda el gasto
 # ------------------------------------------------
 class RegistrarGastoView(LoginRequiredMixin, View):
+    """
+    Vista funcional para el registro de nuevos gastos operativos.
+
+    Procesa solicitudes POST enviadas desde el formulario modal del dashboard.
+    Asigna automáticamente el usuario que registra la operación para mantener
+    la trazabilidad.
+    """
     def post(self, request, *args, **kwargs):
         form = GastoForm(request.POST)
         if form.is_valid():
@@ -205,9 +272,15 @@ class RegistrarGastoView(LoginRequiredMixin, View):
         else:
             return JsonResponse({'success': False, 'errors': form.errors.as_json()}, status=400)
 
-# VISTA 4: La que guarda la categoría (Sin cambios)
+# VISTA 4: La que guarda la categoría
 # ------------------------------------------------
 class RegistrarCategoriaGastoView(LoginRequiredMixin, View):
+    """
+    Vista funcional para la creación dinámica de categorías de gastos.
+
+    Permite añadir nuevas categorías directamente desde la interfaz de registro de gastos,
+    mejorando la usabilidad al evitar interrupciones en el flujo de trabajo.
+    """
     def post(self, request, *args, **kwargs):
         form = CategoriaGastoForm(request.POST)
         if form.is_valid():
@@ -217,13 +290,29 @@ class RegistrarCategoriaGastoView(LoginRequiredMixin, View):
             return JsonResponse({'success': False, 'errors': form.errors.as_json()}, status=400)
 
 
-# VISTA 5: ¡¡NUEVA VISTA PARA EXPORTAR EXCEL!!
+# VISTA 5: VISTA PARA EXPORTAR EXCEL
 # ------------------------------------------------
 class ExportarExcelView(LoginRequiredMixin, View):
+    """
+    Vista encargada de la generación y descarga de reportes financieros en formato Excel (.xlsx).
+
+    Utiliza la librería `openpyxl` para construir un archivo de hoja de cálculo en memoria
+    que contiene:
+    1. Una hoja de resumen con los KPIs principales del período seleccionado.
+    2. Una hoja con el detalle transaccional de todas las ventas.
+    3. Una hoja con el detalle de todos los gastos operativos registrados.
+    """
     
     def get(self, request, *args, **kwargs):
+        """
+        Procesa la solicitud de descarga del reporte.
+
+        Recupera el rango de fechas, consulta la base de datos para obtener ventas y gastos,
+        y formatea la información en hojas de Excel con estilos y encabezados apropiados.
+        Retorna el archivo binario como una respuesta HTTP descargable.
+        """
         
-        # --- 1. Obtener y validar el rango de fechas (MISMA LÓGICA) ---
+        # --- 1. Obtener y validar el rango de fechas ---
         try:
             today = timezone.now().date()
             start_date_str = request.GET.get('start', today.replace(day=1).strftime('%Y-%m-%d'))
@@ -246,7 +335,7 @@ class ExportarExcelView(LoginRequiredMixin, View):
         # --- 2. Crear el libro de Excel en memoria ---
         wb = openpyxl.Workbook()
         
-        # Estilos
+        # Estilos predefinidos para encabezados
         header_font = Font(bold=True)
         center_align = Alignment(horizontal='center')
         
@@ -254,13 +343,14 @@ class ExportarExcelView(LoginRequiredMixin, View):
         ws_resumen = wb.active
         ws_resumen.title = "Resumen (KPIs)"
         
-        # Consultamos los KPIs (MISMA LÓGICA)
+        # Consultamos los KPIs (Misma lógica que en la vista de JSON)
         total_ingresos = Venta.objects.filter(fecha_hora__range=[start_date_aware, end_date_aware]).aggregate(total=Sum('total'))['total'] or 0
         total_cogs = DetalleVenta.objects.filter(venta__fecha_hora__range=[start_date_aware, end_date_aware]).aggregate(total=Sum(F('cantidad') * F('precio_compra_momento')))['total'] or 0
         total_gastos = Gasto.objects.filter(fecha_imputacion__range=[start_date_for_gasto, end_date_for_gasto]).aggregate(total=Sum('monto'))['total'] or 0
         ganancia_bruta = total_ingresos - total_cogs
         beneficio_neto = ganancia_bruta - total_gastos
 
+        # Escritura de datos en la hoja de resumen
         ws_resumen.append(['Reporte Financiero'])
         ws_resumen.append([f"Desde: {start_date_obj.strftime('%d/%m/%Y')} hasta {end_date_obj.strftime('%d/%m/%Y')}"])
         ws_resumen.append([]) # Fila vacía
@@ -280,7 +370,7 @@ class ExportarExcelView(LoginRequiredMixin, View):
         # --- 4. Pestaña 2: Detalle de Ventas (Datos Crudos) ---
         ws_ventas = wb.create_sheet(title="Ventas (Detallado)")
         
-        # Encabezados
+        # Encabezados de la tabla de ventas
         headers_ventas = [
             'ID Venta', 'Fecha/Hora', 'Vendedor', 'Producto', 'Categoría', 
             'Cantidad', 'Precio Unit.', 'Subtotal (Venta)', 'Costo Unit.', 'Costo Total', 'Ganancia'
@@ -293,7 +383,7 @@ class ExportarExcelView(LoginRequiredMixin, View):
             cell.font = header_font
             ws_ventas.column_dimensions[get_column_letter(col_num)].width = 20
 
-        # Consultar y poblar datos
+        # Consultar y poblar datos detallados de ventas
         detalles_qs = DetalleVenta.objects.filter(
             venta__fecha_hora__range=[start_date_aware, end_date_aware]
         ).select_related(
@@ -304,7 +394,7 @@ class ExportarExcelView(LoginRequiredMixin, View):
             costo_total_linea = detalle.cantidad * detalle.precio_compra_momento
             ganancia_linea = detalle.subtotal - costo_total_linea
             
-            # Formatear fecha para Excel (sin zona horaria)
+            # Formatear fecha para Excel (sin zona horaria para compatibilidad)
             fecha_local = timezone.localtime(detalle.venta.fecha_hora)
             
             ws_ventas.append([
