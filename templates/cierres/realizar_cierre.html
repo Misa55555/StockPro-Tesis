@@ -1,3 +1,17 @@
+{# templates/cierres/realizar_cierre.html #}
+{# ========================================================================== #}
+{# VISTA DE CIERRE DE CAJA                                                    #}
+{# ========================================================================== #}
+{# Esta plantilla gestiona la interfaz para dos procesos fundamentales:       #}
+{# 1. El proceso de cierre actual: Muestra lo que el sistema calculó y        #}
+{#    solicita el conteo real (arqueo) al usuario.                            #}
+{# 2. El historial: Lista los cierres pasados con capacidad de desplegar      #}
+{#    detalles profundos (desglose por método y lista de tickets).            #}
+{# Contexto esperado:                                                         #}
+{# - total_sistema, cantidad_tickets, desglose_por_metodo (Para el cierre)    #}
+{# - historial_cierres (QuerySet prefecheado para el historial)               #}
+{# ========================================================================== #}
+
 {% extends 'base.html' %}
 {% load l10n %} 
 
@@ -27,6 +41,7 @@
                     <hr>
                     <h6 class="mt-4">Desglose por Método de Pago:</h6>
                     <ul class="list-group list-group-flush">
+                        {# Itera sobre los totales acumulados por cada método de pago #}
                         {% for item in desglose_por_metodo %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             {{ item.metodo_pago__nombre }}
@@ -47,11 +62,16 @@
                 </div>
                 <div class="card-body">
                     <p>Ingresa los montos contados para cada método de pago.</p>
+                    
+                    {# Formulario POST que envía los datos a la vista RealizarCierreView #}
                     <form method="POST">
                         {% csrf_token %}
+                        
+                        {# Generación dinámica de campos de entrada basada en los métodos que tienen ventas #}
                         {% for item in desglose_por_metodo %}
                         <div class="mb-3">
                             <label for="monto_{{ item.metodo_pago__id }}" class="form-label"><b>{{ item.metodo_pago__nombre }}</b> (Sistema: ${{ item.subtotal|floatformat:2 }})</label>
+                            {# El name 'monto_{id}' es capturado dinámicamente en la vista #}
                             <input type="number" step="0.01" class="form-control" name="monto_{{ item.metodo_pago__id }}" id="monto_{{ item.metodo_pago__id }}" required>
                         </div>
                         {% endfor %}
@@ -61,6 +81,7 @@
                             <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
                         </div>
 
+                        {# Validación simple: solo permite cerrar si existen ventas #}
                         {% if cantidad_tickets > 0 %}
                             <button type="submit" class="btn btn-primary btn-block">Finalizar y Cerrar Caja</button>
                         {% else %}
@@ -94,6 +115,7 @@
                             </thead>
                             <tbody>
                                 {% for cierre in historial_cierres %}
+                                {# Fila Principal: Datos generales del cierre #}
                                 <tr>
                                     <td>#{{ cierre.id }}</td>
                                     <td>{{ cierre.fecha_cierre|date:"d/m/Y H:i" }} hs</td>
@@ -101,16 +123,20 @@
                                     <td>${{ cierre.total_sistema|floatformat:2 }}</td>
                                     <td>${{ cierre.total_arqueo|floatformat:2 }}</td>
                                     <td>
+                                        {# Estilizado condicional para la diferencia (Verde/Rojo) #}
                                         <span class="font-weight-bold {% if cierre.diferencia > 0 %}text-success{% elif cierre.diferencia < 0 %}text-danger{% endif %}">
                                             ${{ cierre.diferencia|floatformat:"+2" }}
                                         </span>
                                     </td>
                                     <td>
+                                        {# Botón para expandir el acordeón de detalles #}
                                         <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ cierre.id }}" aria-expanded="false" aria-controls="collapse-{{ cierre.id }}">
                                             Ver Detalles
                                         </button>
                                     </td>
                                 </tr>
+                                
+                                {# Fila Secundaria: Contenedor colapsable con detalles (oculto por defecto) #}
                                 <tr>
                                     <td colspan="7" class="p-0 border-0">
                                         <div class="collapse" id="collapse-{{ cierre.id }}">
@@ -143,6 +169,7 @@
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
+                                                                {# Itera sobre los detalles guardados (DetalleCierre) #}
                                                                 {% for detalle in cierre.detalles.all %}
                                                                 <tr>
                                                                     <td>{{ detalle.metodo_pago.nombre }}</td>
@@ -178,6 +205,7 @@
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
+                                                                    {# Itera sobre el queryset de ventas relacionadas (Reverse relation) #}
                                                                     {% for venta in cierre.ventas_incluidas.all %}
                                                                     <tr>
                                                                         <td>#{{ venta.id }}</td>

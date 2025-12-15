@@ -1,3 +1,20 @@
+{# templates/dashboard/dashboard.html #}
+{# ========================================================================== #}
+{# DASHBOARD PRINCIPAL (HOME)                                                 #}
+{# ========================================================================== #}
+{# Esta plantilla representa la página de inicio del sistema para usuarios    #}
+{# con permisos de gestión (Administradores/Vendedores).                      #}
+{#                                                                            #}
+{# Funcionalidades principales:                                               #}
+{# 1. Acceso rápido al módulo de Finanzas.                                    #}
+{# 2. Visualización de KPIs diarios (Ventas totales y cantidad de tickets).   #}
+{# 3. Centro de Alertas de Stock:                                             #}
+{#    - Productos con stock por debajo del mínimo.                            #}
+{#    - Lotes próximos a vencer (7 días).                                     #}
+{#    - Lotes ya vencidos (crítico).                                          #}
+{#    - Productos sin stock físico registrado.                                #}
+{# ========================================================================== #}
+
 {% extends "base.html" %}
 
 {% block title %}Dashboard - StockPro{% endblock %}
