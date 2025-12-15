@@ -1,7 +1,21 @@
+{# templates/stock/partials/category_form.html #}
+{# ========================================================================== #}
+{# FORMULARIO PARCIAL DE CATEGORÍA (MODAL)                                    #}
+{# ========================================================================== #}
+{# Esta plantilla parcial renderiza el formulario para crear o editar una     #}
+{# categoría dentro de una ventana modal.                                     #}
+{#                                                                            #}
+{# Características:                                                           #}
+{# 1. Reutilizable: Sirve tanto para CreateView como para UpdateView.         #}
+{# 2. Dinámico: El título cambia según si existe un objeto (edición) o no.    #}
+{# 3. AJAX: Utiliza 'submitModalForm' para el envío asíncrono de datos.       #}
+{# ========================================================================== #}
+
 <div class="modal-header">
     <h5 class="modal-title">{% if object %}Editar Categoría{% else %}Nueva Categoría{% endif %}</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
+
 <form method="post" action="{{ request.path }}" onsubmit="return submitModalForm(this)">
     {% csrf_token %}
     <div class="modal-body">

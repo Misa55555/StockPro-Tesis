@@ -1,5 +1,22 @@
+{# templates/stock/partials/category_options.html #}
+{# ========================================================================== #}
+{# OPCIONES DE CATEGORÍA (PARTIAL)                                            #}
+{# ========================================================================== #}
+{# Esta plantilla parcial renderiza únicamente las etiquetas "option" para    #}
+{# un selector de categorías.                                                 #}
+{#                                                                            #}
+{# Uso principal:                                                             #}
+{# - Actualización dinámica de selectores (Select2) vía AJAX tras crear una   #}
+{#   nueva categoría desde un modal, sin recargar toda la página.             #}
+{#                                                                            #}
+{# Contexto esperado:                                                         #}
+{# - categorias: QuerySet de todas las categorías activas.                    #}
+{# - object (opcional): Instancia actual para pre-seleccionar la opción.      #}
+{# ========================================================================== #}
+
 <option value="">---------</option>
 {% for categoria in categorias %}
+{# Se marca como 'selected' si el ID coincide con la categoría del objeto actual #}
 <option value="{{ categoria.pk }}" {% if categoria.pk == object.categoria.pk %}selected{% endif %}>
     {{ categoria.nombre }}
 </option>

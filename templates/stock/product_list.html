@@ -1,7 +1,23 @@
+{# templates/stock/product_list.html #}
+{# ========================================================================== #}
+{# LISTADO PRINCIPAL DE PRODUCTOS (CATÁLOGO)                                  #}
+{# ========================================================================== #}
+{# Esta plantilla es el núcleo de la gestión de inventario. Muestra la lista  #}
+{# completa de productos, su stock total calculado y permite realizar todas   #}
+{# las operaciones CRUD y de gestión de stock.                                #}
+{#                                                                            #}
+{# Características avanzadas:                                                 #}
+{# 1. Filtros dinámicos (django-filters) integrados en la parte superior.     #}
+{# 2. Indicadores visuales de estado (Stock Bajo, Inactivo) en las filas.     #}
+{# 3. Sistema de "Acordeón" (Collapse) para ver el detalle de lotes sin       #}
+{#    salir del listado principal.                                            #}
+{# 4. Acciones contextuales (Editar, Ocultar, Borrar, Gestionar Lotes).       #}
+{# ========================================================================== #}
+
 {% extends "base.html" %}
 
 {% block head %}
-    {# Carga los archivos JS/CSS para los widgets de Select2 #}
+    {# Carga de archivos estáticos JS/CSS necesarios para los widgets del filtro (ej. Select2) #}
     {{ filterset.form.media }}
 {% endblock %}
 
@@ -71,8 +87,11 @@
                         <th class="text-end" style="min-width: 300px;">Acciones</th> </tr>
                 </thead>
                 <tbody>
+                    {# Iteración sobre el listado de productos (paginado o filtrado) #}
                     {% for producto in productos %}
+                    
                     <tr class="{% if not producto.is_active %}table-secondary text-muted{% elif producto.get_stock_total <= producto.stock_minimo %}table-danger{% endif %}">
+                        
                         <td>
                             <div class="d-flex align-items-center">
                                 <button class="btn btn-sm btn-outline-primary me-2" type="button" 
@@ -91,10 +110,12 @@
                                 </div>
                             </div>
                         </td>
+                        
                         <td>
                             <span class="fs-5 fw-bold">{{ producto.get_stock_total|floatformat:"-2" }}</span> 
                             <small>{{ producto.unidad_medida.abreviatura }}</small>
                         </td>
+                        
                         <td>
                             {% if producto.is_active %}
                                 <span class="badge bg-success">Activo</span>
@@ -102,6 +123,7 @@
                                 <span class="badge bg-danger">Oculto</span>
                             {% endif %}
                         </td>
+                        
                         <td class="text-end">
                             <div class="btn-group" role="group">
                                 <button type="button" class="btn btn-sm btn-warning" onclick="openModal('{% url 'stock_app:product_edit' producto.pk %}')" title="Editar Producto">
@@ -133,6 +155,7 @@
                                         <i class="fas fa-boxes"></i> Detalle de Lotes: {{ producto.nombre }}
                                     </h6>
                                     
+                                    {# Verificación de existencia de lotes #}
                                     {% if producto.lotes.all %}
                                         <table class="table table-sm table-bordered mb-0 bg-white">
                                             <thead class="table-light">

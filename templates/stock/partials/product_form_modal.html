@@ -1,7 +1,23 @@
+{# templates/stock/partials/product_form_modal.html #}
+{# ========================================================================== #}
+{# FORMULARIO DE EDICIÓN RÁPIDA DE PRODUCTO (MODAL)                           #}
+{# ========================================================================== #}
+{# Esta plantilla renderiza el formulario de edición de un producto dentro    #}
+{# de una ventana modal. A diferencia del formulario completo de página       #}
+{# completa, este está optimizado para ajustes rápidos.                       #}
+{#                                                                            #}
+{# Características:                                                           #}
+{# 1. Exclusión Lógica: Oculta el campo de búsqueda (usado solo en creación). #}
+{# 2. Soporte de Widgets: Carga los assets necesarios (JS/CSS) para campos    #}
+{#    especiales como Select2.                                                #}
+{# 3. Envío Asíncrono: Utiliza 'submitModalForm' para guardar sin recargar.   #}
+{# ========================================================================== #}
+
 <div class="modal-header">
     <h5 class="modal-title">Editar Producto</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
+
 <form method="post" action="{{ request.path }}" onsubmit="return submitModalForm(this)">
     {% csrf_token %}
     <div class="modal-body">
@@ -16,6 +32,7 @@
             {% endif %}
         {% endfor %}
     </div>
+    
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-primary">Guardar Cambios</button>

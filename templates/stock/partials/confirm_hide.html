@@ -1,19 +1,38 @@
+{# templates/stock/partials/confirm_hide.html #}
+{# ========================================================================== #}
+{# MODAL DE CONFIRMACIÓN PARA OCULTAR (SOFT DELETE)                           #}
+{# ========================================================================== #}
+{# Esta plantilla parcial se utiliza para confirmar la acción de "ocultar"    #}
+{# (desactivar) un registro, como una Marca o Categoría, en lugar de          #}
+{# eliminarlo permanentemente.                                                #}
+{#                                                                            #}
+{# Características principales:                                               #}
+{# 1. Mensaje de confirmación con el nombre del objeto dinámico.              #}
+{# 2. Sistema de Alerta de Dependencias: Advierte si el objeto está siendo    #}
+{#    utilizado por otros registros (ej. una Marca usada por 5 productos).    #}
+{# 3. Formulario POST para ejecutar la acción de cambio de estado.            #}
+{# ========================================================================== #}
+
 <div class="modal-header">
     <h5 class="modal-title">Confirmar Ocultar</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
+
 <div class="modal-body">
     <p>¿Estás seguro de que quieres ocultar **"{{ object.nombre }}"**?</p>
+    
     {% if related_objects_count > 0 %}
     <div class="alert alert-warning">
         <strong>Atención:</strong> Este ítem está siendo utilizado por <strong>{{ related_objects_count }}</strong> producto(s).
     </div>
     {% endif %}
 </div>
+
 <form method="post" action="{{ request.path }}">
     {% csrf_token %}
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        
         <button type="submit" class="btn btn-danger">Sí, ocultar</button>
     </div>
 </form>

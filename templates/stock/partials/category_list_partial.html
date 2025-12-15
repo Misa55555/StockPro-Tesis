@@ -1,3 +1,19 @@
+{# templates/stock/partials/category_list_partial.html #}
+{# ========================================================================== #}
+{# LISTADO PARCIAL DE CATEGORÍAS (HTMX)                                       #}
+{# ========================================================================== #}
+{# Esta plantilla es un fragmento HTML diseñado para ser renderizado          #}
+{# dinámicamente dentro de un contenedor, sin recargar la página completa.    #}
+{# Se utiliza típicamente para actualizar la tabla tras una búsqueda o        #}
+{# acción CRUD.                                                               #}
+{#                                                                            #}
+{# Características técnicas:                                                  #}
+{# 1. HTMX: Utiliza atributos 'hx-get' y 'hx-target' para gestionar la        #}
+{#    interacción con el servidor y la carga de modales.                      #}
+{# 2. Diseño encapsulado: Solo contiene la tarjeta y la tabla, sin bloques    #}
+{#    de extensión de base.                                                   #}
+{# ========================================================================== #}
+
 <div class="card shadow-sm">
     <div class="card-body">
         <table class="table table-hover">
@@ -9,6 +25,7 @@
                 </tr>
             </thead>
             <tbody>
+                {# Iteración sobre la lista de categorías #}
                 {% for categoria in categorias %}
                 <tr>
                     <td>{{ categoria.nombre }}</td>

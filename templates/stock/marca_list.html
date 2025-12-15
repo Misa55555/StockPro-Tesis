@@ -1,8 +1,24 @@
+{# templates/stock/marca_list.html #}
+{# ========================================================================== #}
+{# LISTADO DE GESTIÓN DE MARCAS                                               #}
+{# ========================================================================== #}
+{# Esta plantilla renderiza la interfaz administrativa para las marcas de     #}
+{# productos. Permite realizar operaciones CRUD, cambiar el estado (activo/   #}
+{# oculto) y ejecutar actualizaciones masivas de precios por marca.           #}
+{#                                                                            #}
+{# Características principales:                                               #}
+{# 1. Filtrado de marcas ocultas mediante switch (GET).                       #}
+{# 2. Acciones asíncronas vía Modal (Crear, Editar, Actualizar Precios).      #}
+{# 3. Indicadores visuales de estado y acciones contextuales.                 #}
+{# ========================================================================== #}
+
 {% extends "base.html" %}
 {% block title %}Gestionar Marcas{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Gestión de Marcas</h1>
+    
     <button class="btn btn-primary" onclick="openModal('{% url 'stock_app:marca_add' %}')">
         Añadir Marca
     </button>
@@ -30,9 +46,12 @@
                 </tr>
             </thead>
             <tbody>
+                {# Iteración sobre el queryset de marcas #}
                 {% for marca in marcas %}
+                
                 <tr class="{% if not marca.is_active %}table-secondary text-muted{% endif %}">
                     <td>{{ marca.nombre }}</td>
+                    
                     <td>
                         {% if marca.is_active %}
                             <span class="badge bg-success">Activa</span>
@@ -40,7 +59,11 @@
                             <span class="badge bg-danger">Oculta</span>
                         {% endif %}
                     </td>
+                    
                     <td class="text-end">
+                        
+                        {# Acción Especial: Actualización Masiva de Precios #}
+                        {# Solo disponible si la marca está activa #}
                         {% if marca.is_active %}
                         <button class="btn btn-sm btn-info text-white me-1" 
                                 onclick="openModal('{% url 'stock_app:marca_update_prices' marca.pk %}')"

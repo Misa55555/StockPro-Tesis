@@ -1,10 +1,27 @@
+{# templates/stock/product_form.html #}
+{# ========================================================================== #}
+{# FORMULARIO DE PRODUCTO (CREACIÓN Y EDICIÓN)                                #}
+{# ========================================================================== #}
+{# Esta plantilla renderiza el formulario para añadir o modificar productos   #}
+{# en el catálogo. Se utiliza una vista basada en clases (CreateView/UpdateView)#}
+{# y comparte la misma estructura para ambas acciones.                        #}
+{#                                                                            #}
+{# Características principales:                                               #}
+{# 1. Diseño organizado en tarjetas (Cards) para agrupar información relacionada.#}
+{# 2. Widget de búsqueda previa (Select2) para evitar duplicados al crear.    #}
+{# 3. Botones de acción rápida (+) para crear Categorías y Marcas vía Modal   #}
+{#    sin abandonar la pantalla actual (AJAX).                                #}
+{# ========================================================================== #}
+
 {% extends "base.html" %}
 {% load static %}
 
 {% block head %}
+    {# Renderiza los archivos CSS/JS necesarios para los widgets del formulario (ej. django-select2) #}
     {{ form.media }}
 {% endblock %}
 
+{# Título dinámico según si se está editando (existe objeto) o creando #}
 {% block title %}{% if object %}Editar Producto{% else %}Añadir Producto{% endif %}{% endblock %}
 
 {% block content %}
@@ -48,6 +65,7 @@
 
         <div class="row">
             <div class="col-lg-8">
+                
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">Información Básica</h6>
@@ -57,6 +75,7 @@
                             <div class="col-md-8">
                                 <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold">Nombre del Producto</label>
                                 {{ form.nombre }}
+                                {# Renderizado manual de errores del campo #}
                                 {% if form.nombre.errors %}<div class="text-danger small">{{ form.nombre.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-4">
@@ -125,6 +144,7 @@
             </div>
 
             <div class="col-lg-4">
+                
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-success">Venta y Stock</h6>
@@ -146,6 +166,7 @@
                         </div>
                     </div>
                 </div>
+                
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-info">Configuración</h6>
@@ -166,13 +187,20 @@
 
 {% block extra_js %}
 <script>
+    // ==========================================================================
+    // LÓGICA DE MANEJO DE MODALES ANIDADOS
+    // ==========================================================================
+    // Este script intercepta el envío de formularios dentro de modales (creación
+    // de categorías/marcas) para procesarlos vía AJAX y actualizar los selectores
+    // del formulario principal sin recargar la página.
+    // ==========================================================================
+
     document.addEventListener('DOMContentLoaded', function() {
         const mainModalEl = document.getElementById('mainModal');
         const modalWrapper = document.getElementById('modal-content-wrapper');
 
-        // --- CORRECCIÓN CLAVE ---
-        // Cuando se abre el modal, buscamos el formulario y le quitamos el 'onsubmit'
-        // Esto evita que el script global 'submitModalForm' se ejecute y recargue la página.
+        // Modifica el comportamiento por defecto al abrir un modal
+        // Elimina atributos onsubmit inline que podrían provocar recargas no deseadas
         mainModalEl.addEventListener('shown.bs.modal', function () {
             const form = mainModalEl.querySelector('form');
             if (form && form.hasAttribute('onsubmit')) {
@@ -181,21 +209,24 @@
             }
         });
 
-        // Manejador de envío personalizado (Sin recarga)
+        // Manejador de eventos delegado para el envío de formularios en el modal
         modalWrapper.addEventListener('submit', function(e) {
             const form = e.target;
             const actionUrl = form.getAttribute('action');
+            
+            // Verifica si la acción corresponde a creación rápida de categoría o marca
             const isCategory = actionUrl.includes('categorias/add');
             const isBrand = actionUrl.includes('marcas/add');
 
             if (isCategory || isBrand) {
-                e.preventDefault(); // Detenemos el envío normal
+                e.preventDefault(); // Detiene el envío estándar del formulario
                 e.stopPropagation();
 
                 const headers = {
                     'X-Requested-With': 'XMLHttpRequest'
                 };
 
+                // Envío asíncrono de datos
                 fetch(actionUrl, {
                     method: 'POST',
                     body: new FormData(form),
@@ -204,7 +235,7 @@
                 .then(response => {
                     return response.json().then(data => {
                         if (!response.ok) {
-                            // Si hay error (ej. duplicado), lanzamos excepción para el catch
+                            // Propaga errores del servidor (ej. validación, duplicados)
                             throw new Error(data.message || 'Error desconocido al guardar.');
                         }
                         return data;
@@ -212,17 +243,19 @@
                 })
                 .then(data => {
                     if (data.status === 'success') {
-                        // 1. Cerrar modal
+                        // 1. Cerrar el modal tras éxito
                         const modalInstance = bootstrap.Modal.getInstance(mainModalEl);
                         modalInstance.hide();
 
-                        // 2. Crear opción y actualizar select
+                        // 2. Crear nueva opción y seleccionarla en el dropdown correspondiente
                         const newOption = new Option(data.nombre, data.id, true, true);
                         let selectId = (data.type === 'categoria') ? '#id_categoria' : '#id_marca';
 
                         if (selectId) {
+                            // Añade la opción y dispara el evento 'change' para notificar a Select2
                             $(selectId).append(newOption).trigger('change');
                             
+                            // Feedback visual de éxito
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Guardado',
@@ -234,7 +267,7 @@
                     }
                 })
                 .catch(error => {
-                    // Mostramos el error (ej. "La marca ya existe") pero NO cerramos ni recargamos
+                    // Manejo de errores visual con SweetAlert
                     Swal.fire({
                         icon: 'error',
                         title: 'Atención',

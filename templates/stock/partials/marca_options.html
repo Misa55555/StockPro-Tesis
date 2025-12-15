@@ -1,5 +1,22 @@
+{# templates/stock/partials/marca_options.html #}
+{# ========================================================================== #}
+{# OPCIONES DE MARCA (PARTIAL)                                                #}
+{# ========================================================================== #}
+{# Esta plantilla parcial renderiza únicamente las etiquetas <option> para    #}
+{# un selector de marcas.                                                     #}
+{#                                                                            #}
+{# Uso principal:                                                             #}
+{# - Actualización dinámica de selectores (Select2) vía AJAX tras crear una   #}
+{#   nueva marca desde un modal, sin recargar toda la página.                 #}
+{#                                                                            #}
+{# Contexto esperado:                                                         #}
+{# - marcas: QuerySet de todas las marcas activas.                            #}
+{# - object (opcional): Instancia actual para pre-seleccionar la opción.      #}
+{# ========================================================================== #}
+
 <option value="">---------</option>
 {% for marca in marcas %}
+{# Se marca como 'selected' si el ID coincide con la marca del objeto actual #}
 <option value="{{ marca.pk }}" {% if marca.pk == object.marca.pk %}selected{% endif %}>
     {{ marca.nombre }}
 </option>

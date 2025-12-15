@@ -1,14 +1,29 @@
+{# templates/stock/partials/marca_confirm_delete.html #}
+{# ========================================================================== #}
+{# MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE MARCA                              #}
+{# ========================================================================== #}
+{# Esta plantilla parcial se carga dentro de un modal para solicitar          #}
+{# confirmación antes de eliminar una marca del sistema.                      #}
+{#                                                                            #}
+{# Características:                                                           #}
+{# 1. Advertencia explícita mostrando el nombre de la marca (evita errores).  #}
+{# 2. Envío asíncrono (AJAX) para procesar la eliminación sin recargar.       #}
+{# ========================================================================== #}
+
 <div class="modal-header">
     <h5 class="modal-title">Confirmar Eliminación</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
+
 <div class="modal-body">
     <p>¿Estás seguro de que quieres eliminar la marca "{{ object.nombre }}"?</p>
 </div>
+
 <form method="post" action="{{ request.path }}" onsubmit="return submitModalForm(this)">
     {% csrf_token %}
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        
         <button type="submit" class="btn btn-danger">Sí, eliminar</button>
     </div>
 </form>

@@ -1,221 +1,536 @@
-{% extends "base.html" %}
+{# templates/finanzas/dashboard.html #}
+{# ========================================================================== #}
+{# DASHBOARD FINANCIERO                                                       #}
+{# ========================================================================== #}
+{# Esta plantilla renderiza el panel de control financiero.                   #}
+{#                                                                            #}
+{# Características principales:                                               #}
+{# 1. KPIs Financieros: Ingresos, Gastos, Margen Bruto, Beneficio Neto.       #}
+{# 2. Gráficos Interactivos (Chart.js): Evolución temporal, distribución      #}
+{#    de gastos, ventas por categoría, rankings de productos, etc.            #}
+{# 3. Gestión de Gastos: Modals para registrar gastos y nuevas categorías     #}
+{#    vía AJAX sin recargar la página.                                        #}
+{# 4. Reportes: Filtrado por rango de fechas y exportación a Excel.           #}
+{# ========================================================================== #}
 
-{% block head %}
-    {{ form.media }}
-{% endblock %}
+{% extends 'base.html' %}
+{% load static %}
+{% load l10n %}
 
-{% block title %}Cargar Stock de Producto{% endblock %}
+{% block title %}{{ titulo|default:"Dashboard" }}{% endblock title %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">📥 Cargar Nuevo Lote de Stock</h4>
+<div class="container-fluid">
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ titulo }}</h1>
+        <div class="d-flex align-items-center">
+            <div class="me-2">
+                <label for="startDate" class="form-label-sm">Desde:</label>
+                <input type="date" id="startDate" class="form-control form-control-sm" value="{{ fecha_inicio_mes|date:'Y-m-d' }}">
             </div>
-            <div class="card-body">
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {% for error in form.non_field_errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
+            <div class="me-2">
+                <label for="endDate" class="form-label-sm">Hasta:</label>
+                <input type="date" id="endDate" class="form-control form-control-sm" value="{{ fecha_hoy|date:'Y-m-d' }}">
+            </div>
+            
+            <button id="filterButton" class="btn btn-primary btn-sm align-self-end me-2">Filtrar</button>
+            
+            <a href="#" id="exportExcelButton" class="btn btn-outline-success btn-sm align-self-end me-2" title="Descargar Reporte en Excel">
+                <i class="fas fa-file-excel"></i>
+            </a>
+            
+            <button type="button" class="btn btn-success btn-sm align-self-end" data-bs-toggle="modal" data-bs-target="#gastoModal">
+                <i class="fas fa-plus"></i> Gasto
+            </button>
+        </div>
+    </div>
 
-                <form method="post" id="loteForm">
-                    {% csrf_token %}
-                    
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">{{ form.producto.label }}</label>
-                        {{ form.producto }}
-                        {% if form.producto.errors %}
-                            <div class="text-danger small mt-1">{{ form.producto.errors.0 }}</div>
-                        {% endif %}
-                        <div class="form-text">Busca el producto al que deseas añadir stock.</div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 border-end">
-                            <h5 class="text-muted mb-3">Datos de Compra / Ingreso</h5>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ form.cantidad_actual.label }}</label>
-                                {{ form.cantidad_actual }}
-                                {% if form.cantidad_actual.errors %}
-                                    <div class="text-danger small mt-1">{{ form.cantidad_actual.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="card bg-light mb-3">
-                                <div class="card-body p-2">
-                                    <label class="form-label small text-muted">{{ form.costo_total_compra.label }} (Opcional)</label>
-                                    {{ form.costo_total_compra }}
-                                    {% if form.costo_total_compra.errors %}
-                                        <div class="text-danger small mt-1">{{ form.costo_total_compra.errors.0 }}</div>
-                                    {% endif %}
-                                    <div class="form-text small">Si llenas esto, el costo unitario se calcula solo.</div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ form.precio_compra.label }}</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.precio_compra }}
-                                </div>
-                                {% if form.precio_compra.errors %}
-                                    <div class="text-danger small mt-1">{{ form.precio_compra.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ form.fecha_vencimiento.label }}</label>
-                                {{ form.fecha_vencimiento }}
-                                {% if form.fecha_vencimiento.errors %}
-                                    <div class="alert alert-danger py-1 px-2 mt-1 small">
-                                        <i class="fas fa-exclamation-circle"></i> {{ form.fecha_vencimiento.errors.0 }}
-                                    </div>
-                                {% endif %}
-                                </div>
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Beneficio Neto</div>
+                            <div id="kpi-beneficio-neto" class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div>
                         </div>
-
-                        <div class="col-md-6 bg-light-subtle p-3 rounded">
-                            <h5 class="text-muted mb-3">Precio de Venta al Público</h5>
-                            
-                            <div class="alert alert-info py-2 small">
-                                <i class="fas fa-info-circle"></i> El precio actual se cargará automáticamente al seleccionar un producto.
-                            </div>
-
-                            <div class="mb-3 form-check form-switch">
-                                {{ form.actualizar_precio }}
-                                <label class="form-check-label fw-bold" for="id_check_precio">
-                                    {{ form.actualizar_precio.label }}
-                                </label>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ form.nuevo_precio_venta.label }}</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.nuevo_precio_venta }}
-                                </div>
-                                {% if form.nuevo_precio_venta.errors %}
-                                    <div class="text-danger small mt-1">{{ form.nuevo_precio_venta.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div id="rentabilidad-info" class="d-none mt-3">
-                                <h6>Rentabilidad Estimada: <span id="margen-calculado" class="badge bg-success">0%</span></h6>
-                            </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
                         </div>
                     </div>
-
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-success btn-lg">Guardar Lote y Actualizar</button>
-                        <a href="{% url 'stock_app:product_list' %}" class="btn btn-outline-secondary">Cancelar</a>
-                    </div>
-                </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Ingresos Brutos</div>
+                    <div id="kpi-ingresos" class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Ganancia Bruta (Margen)</div>
+                    <div id="kpi-ganancia-bruta" class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Gastos Operativos</div>
+                    <div id="kpi-gastos" class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div>
+                </div>
             </div>
         </div>
     </div>
+
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Evolución de Ingresos vs Gastos</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="evolucionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Gastos por Categoría</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4">
+                        <canvas id="gastosChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-4 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Top 5 Productos (Más Vendidos)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar" style="height: 250px;">
+                        <canvas id="topProductosVentaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Top 5 Productos (Más Rentables)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar" style="height: 250px;">
+                        <canvas id="topProductosRentablesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">Ventas por Vendedor</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar" style="height: 250px;">
+                        <canvas id="ventasPorVendedorChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Ventas por Hora del Día (Horas Pico)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar" style="height: 250px;">
+                        <canvas id="ventasPorHoraChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Ventas por Turno</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4" style="height: 250px;">
+                        <canvas id="ventasPorTurnoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Ventas por Categoría de Producto</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4" style="height: 250px;">
+                        <canvas id="ventasCategoriaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div> 
+
+<div class="modal fade" id="gastoModal" tabindex="-1" aria-labelledby="gastoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gastoModalLabel">Registrar Nuevo Gasto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="gastoForm" method="POST" action="{% url 'finanzas_app:registrar_gasto' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ gasto_form.categoria.id_for_label }}" class="form-label">{{ gasto_form.categoria.label }}</label>
+                        <div class="input-group">
+                            {{ gasto_form.categoria }}
+                            <button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#categoriaGastoModal" title="Nueva Categoría">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ gasto_form.monto.id_for_label }}" class="form-label">{{ gasto_form.monto.label }}</label>
+                        {{ gasto_form.monto }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ gasto_form.fecha_imputacion.id_for_label }}" class="form-label">{{ gasto_form.fecha_imputacion.label }}</label>
+                        {{ gasto_form.fecha_imputacion }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ gasto_form.descripcion.id_for_label }}" class="form-label">{{ gasto_form.descripcion.label }}</label>
+                        {{ gasto_form.descripcion }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="guardarGastoBtn">Guardar Gasto</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-{% endblock %}
+
+<div class="modal fade" id="categoriaGastoModal" tabindex="-1" aria-labelledby="categoriaGastoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoriaGastoModalLabel">Nueva Categoría</h5>
+                <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#gastoModal" aria-label="Close"></button>
+            </div>
+            <form id="categoriaGastoForm" method="POST" action="{% url 'finanzas_app:registrar_categoria_gasto' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ categoria_gasto_form.nombre.id_for_label }}" class="form-label">{{ categoria_gasto_form.nombre.label }}</label>
+                        {{ categoria_gasto_form.nombre }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#gastoModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="guardarCategoriaGastoBtn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const selectProducto = $('#id_producto_select');
-    const inputCantidad = document.getElementById('id_cantidad');
-    const inputCostoTotal = document.getElementById('id_costo_total');
-    const inputCostoUnitario = document.getElementById('id_precio_compra_unitario');
-    const checkActualizarPrecio = document.getElementById('id_check_precio');
-    const inputNuevoPrecioVenta = document.getElementById('id_nuevo_precio');
-    const margenInfoDiv = document.getElementById('rentabilidad-info');
-    const margenCalculadoBadge = document.getElementById('margen-calculado');
+    // ==========================================================================
+    // LÓGICA DE JAVASCRIPT PARA EL DASHBOARD
+    // ==========================================================================
+    
+    // Variables globales para almacenar las instancias de los gráficos
+    // Necesarias para destruir los gráficos antiguos antes de redibujarlos al filtrar.
+    let evolucionChartInstance = null;
+    let gastosChartInstance = null;
+    let ventasCategoriaChartInstance = null;
+    let gastoModalInstance = null;
+    let categoriaGastoModalInstance = null;
+    let topProductosVentaChartInstance = null;
+    let topProductosRentablesChartInstance = null;
+    let ventasPorVendedorChartInstance = null;
+    let ventasPorHoraChartInstance = null;
+    let ventasPorTurnoChartInstance = null;
 
-    // Función para manejar el estado inicial del precio de venta
-    function handlePrecioVentaState() {
-        // Si el checkbox NO está marcado, el input debe ser readonly
-        if (!checkActualizarPrecio.checked) {
-            inputNuevoPrecioVenta.readOnly = true;
-            inputNuevoPrecioVenta.classList.remove('bg-white');
-        } else {
-            // Si SÍ está marcado, debe ser editable
-            inputNuevoPrecioVenta.readOnly = false;
-            inputNuevoPrecioVenta.classList.add('bg-white');
-        }
+    // Rutas de API generadas por Django
+    const API_URL = "{% url 'finanzas_app:api_data' %}";
+    const GASTO_FORM_URL = "{% url 'finanzas_app:registrar_gasto' %}";
+    const CATEGORIA_GASTO_FORM_URL = "{% url 'finanzas_app:registrar_categoria_gasto' %}";
+    const EXCEL_URL_BASE = "{% url 'finanzas_app:exportar_excel' %}";
+
+    // Función auxiliar para formatear valores numéricos a moneda local (ARS)
+    function formatCurrency(value) {
+        return parseFloat(value).toLocaleString('es-AR', {
+            style: 'currency', currency: 'ARS', minimumFractionDigits: 2, maximumFractionDigits: 2
+        });
     }
 
-    // Ejecutar al inicio por si el navegador recuerda el estado del checkbox al recargar
-    handlePrecioVentaState();
-
-    selectProducto.on('select2:select', function (e) {
-        const productId = e.params.data.id;
-        if (productId) {
-            fetch(`{% url 'stock_app:api_product_details' %}?product_id=${productId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        inputNuevoPrecioVenta.value = data.precio_venta;
-                        calculateMargin();
-                    }
-                });
-        }
-    });
-
-    checkActualizarPrecio.addEventListener('change', function() {
-        handlePrecioVentaState();
-        if (this.checked) {
-            inputNuevoPrecioVenta.focus();
-        }
-    });
-
-    function calculateUnitCost() {
-        const cantidad = parseFloat(inputCantidad.value) || 0;
-        const totalCompra = parseFloat(inputCostoTotal.value) || 0;
-        if (cantidad > 0 && totalCompra > 0) {
-            inputCostoUnitario.value = (totalCompra / cantidad).toFixed(2);
-        }
-        calculateMargin();
+    // Actualiza el enlace de exportación a Excel con los parámetros de fecha actuales
+    function updateExcelLink() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const excelButton = document.getElementById('exportExcelButton');
+        
+        // Construcción dinámica de la URL con parámetros GET
+        const excelUrl = new URL(EXCEL_URL_BASE, window.location.origin);
+        excelUrl.searchParams.append('start', startDate);
+        excelUrl.searchParams.append('end', endDate);
+        
+        excelButton.href = excelUrl.href;
     }
 
-    function calculateTotalCost() {
-         const cantidad = parseFloat(inputCantidad.value) || 0;
-         const unitario = parseFloat(inputCostoUnitario.value) || 0;
-         if (cantidad > 0 && unitario > 0 && document.activeElement === inputCostoUnitario) {
-             inputCostoTotal.value = (cantidad * unitario).toFixed(2);
-         }
-         calculateMargin();
-    }
-
-    function calculateMargin() {
-        const costo = parseFloat(inputCostoUnitario.value) || 0;
-        const venta = parseFloat(inputNuevoPrecioVenta.value) || 0;
-        if (costo > 0 && venta > 0) {
-            margenInfoDiv.classList.remove('d-none');
-            const margen = ((venta - costo) / costo) * 100;
-            margenCalculadoBadge.textContent = margen.toFixed(1) + '%';
-            if (margen < 15) {
-                margenCalculadoBadge.className = 'badge bg-danger';
-            } else if (margen < 30) {
-                margenCalculadoBadge.className = 'badge bg-warning text-dark';
-            } else {
-                margenCalculadoBadge.className = 'badge bg-success';
+    // Función Principal: Orquesta la obtención de datos y el redibujado de la interfaz
+    async function fetchDataAndDrawCharts() {
+        
+        // Actualizamos el link de Excel cada vez que filtramos
+        updateExcelLink();
+        
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const url = `${API_URL}?start=${startDate}&end=${endDate}`;
+        
+        try {
+            // Solicitud asíncrona a la API de Finanzas
+            const response = await fetch(url);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Error ${response.status}: ${errorData.error || 'Error desconocido'}`);
             }
-        } else {
-            margenInfoDiv.classList.add('d-none');
+            const data = await response.json();
+            
+            // Actualización de Tarjetas KPI
+            updateKPIs(data.kpis);
+            
+            // Renderizado de Gráficos
+            drawEvolucionChart(data.charts.evolucion_ingresos_gastos);
+            drawGastosChart(data.charts.gastos_por_categoria);
+            drawVentasCategoriaChart(data.charts.ventas_por_categoria);
+            
+            // Gráficos de Ranking (reutilizan una función genérica)
+            drawRankingChart('topProductosVentaChart', 'topProductosVentaChartInstance', 'Top 5 Vendidos', data.charts.top_productos_venta, '#4e73df', false);
+            drawRankingChart('topProductosRentablesChart', 'topProductosRentablesChartInstance', 'Top 5 Rentables', data.charts.top_productos_rentables, '#1cc88a', true);
+            drawRankingChart('ventasPorVendedorChart', 'ventasPorVendedorChartInstance', 'Ventas Vendedor', data.charts.ventas_por_vendedor, '#36b9cc', true);
+            
+            // Gráficos Temporales
+            drawVentasPorHoraChart(data.charts.ventas_por_hora);
+            drawVentasPorTurnoChart(data.charts.ventas_por_turno);
+            
+        } catch (error) {
+            console.error("Error al cargar datos del dashboard:", error);
+            Swal.fire({
+                icon: 'error', title: 'Error al cargar datos',
+                text: `No se pudieron cargar los datos del dashboard. Revisa la consola.\nError: ${error.message}`,
+            });
         }
     }
 
-    inputCantidad.addEventListener('input', calculateUnitCost);
-    inputCostoTotal.addEventListener('input', calculateUnitCost);
-    inputCostoUnitario.addEventListener('input', calculateTotalCost);
-    inputNuevoPrecioVenta.addEventListener('input', calculateMargin);
-
-    // Recalcular margen al inicio si hay valores (por ejemplo, si falló la validación y se recargó la página)
-    if (inputCostoUnitario.value && inputNuevoPrecioVenta.value) {
-        calculateMargin();
+    // Actualiza el DOM de las tarjetas de métricas
+    function updateKPIs(kpis) {
+        document.getElementById('kpi-beneficio-neto').textContent = formatCurrency(kpis.beneficio_neto);
+        document.getElementById('kpi-ingresos').textContent = formatCurrency(kpis.total_ingresos);
+        document.getElementById('kpi-ganancia-bruta').textContent = formatCurrency(kpis.ganancia_bruta);
+        document.getElementById('kpi-gastos').textContent = formatCurrency(kpis.total_gastos);
     }
-});
+
+    // --- FUNCIONES DE DIBUJO DE GRÁFICOS (Chart.js) ---
+    
+    // Gráfico de Líneas (Evolución)
+    function drawEvolucionChart(chartData) {
+        const ctx = document.getElementById('evolucionChart').getContext('2d');
+        if (evolucionChartInstance) { evolucionChartInstance.destroy(); }
+        evolucionChartInstance = new Chart(ctx, { type: 'line', data: { labels: chartData.labels, datasets: [{ label: "Ingresos", data: chartData.ingresos_data, borderColor: 'rgba(78, 115, 223, 1)', backgroundColor: 'rgba(78, 115, 223, 0.1)', fill: true, tension: 0.1 }, { label: "Gastos", data: chartData.gastos_data, borderColor: 'rgba(231, 74, 59, 1)', backgroundColor: 'rgba(231, 74, 59, 0.1)', fill: true, tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: function(value, index, values) { return formatCurrency(value); } } } } } });
+    }
+    
+    // Gráfico de Torta (Distribución Gastos)
+    function drawGastosChart(chartData) {
+        const ctx = document.getElementById('gastosChart').getContext('2d');
+        if (gastosChartInstance) { gastosChartInstance.destroy(); }
+        gastosChartInstance = new Chart(ctx, { type: 'pie', data: { labels: chartData.labels, datasets: [{ data: chartData.data, backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'], }] }, options: { responsive: true, maintainAspectRatio: false, } });
+    }
+    
+    // Gráfico de Dona (Ventas Categoría)
+    function drawVentasCategoriaChart(chartData) {
+        const ctx = document.getElementById('ventasCategoriaChart').getContext('2d');
+        if (ventasCategoriaChartInstance) { ventasCategoriaChartInstance.destroy(); }
+        ventasCategoriaChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: chartData.labels, datasets: [{ data: chartData.data, backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'], }] }, options: { responsive: true, maintainAspectRatio: false, } });
+    }
+    
+    // Función genérica para gráficos de barras horizontales (Rankings)
+    function drawRankingChart(canvasId, chartInstanceName, label, chartData, color, isCurrency) {
+        let instance = window[chartInstanceName]; 
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        if (instance) { instance.destroy(); }
+        const options = { type: 'bar', data: { labels: chartData.labels, datasets: [{ label: label, data: chartData.data, backgroundColor: color, }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { ticks: {} } }, plugins: { legend: { display: false } } } };
+        if (isCurrency) {
+            options.options.scales.x.ticks.callback = function(value) { return formatCurrency(value); };
+        }
+        window[chartInstanceName] = new Chart(ctx, options);
+    }
+    
+    // Gráfico de Barras (Horas Pico)
+    function drawVentasPorHoraChart(chartData) {
+        const ctx = document.getElementById('ventasPorHoraChart').getContext('2d');
+        if (ventasPorHoraChartInstance) { ventasPorHoraChartInstance.destroy(); }
+        ventasPorHoraChartInstance = new Chart(ctx, { type: 'bar', data: { labels: chartData.labels, datasets: [{ label: 'Ventas por Hora', data: chartData.data, backgroundColor: '#4e73df', }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: function(value) { return formatCurrency(value); } } }, x: { ticks: { autoSkip: true, maxTicksLimit: 12 } } }, plugins: { legend: { display: false } } } });
+    }
+    
+    // Gráfico de Torta (Turnos)
+    function drawVentasPorTurnoChart(chartData) {
+        const ctx = document.getElementById('ventasPorTurnoChart').getContext('2d');
+        if (ventasPorTurnoChartInstance) { ventasPorTurnoChartInstance.destroy(); }
+        ventasPorTurnoChartInstance = new Chart(ctx, { type: 'pie', data: { labels: chartData.labels, datasets: [{ data: chartData.data, backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc'], }] }, options: { responsive: true, maintainAspectRatio: false, } });
+    }
+
+    // --- MANEJO DE FORMULARIOS AJAX (MODALS) ---
+    
+    // Parsea errores JSON de Django para mostrarlos en SweetAlert
+    function parseDjangoErrors(jsonErrors) {
+        try {
+            const errors = JSON.parse(jsonErrors);
+            let errorHtml = '<ul class="text-start">';
+            for (const field in errors) {
+                errors[field].forEach(error => {
+                    const fieldName = (field === '__all__') ? '' : `<strong>${field}:</strong> `;
+                    errorHtml += `<li>${fieldName}${error.message}</li>`;
+                });
+            }
+            errorHtml += '</ul>';
+            return errorHtml;
+        } catch(e) { return "Error desconocido. Revisa la consola."; }
+    }
+
+    // Envío del formulario de Gastos
+    async function handleGastoSubmit(event) {
+        event.preventDefault(); 
+        const form = event.target;
+        const formData = new FormData(form);
+        const submitButton = document.getElementById('guardarGastoBtn');
+        
+        // Feedback visual de carga
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+        
+        try {
+            const response = await fetch(GASTO_FORM_URL, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await response.json();
+            if (response.ok) {
+                gastoModalInstance.hide();
+                form.reset();
+                Swal.fire({ icon: 'success', title: '¡Gasto Registrado!', timer: 1500, showConfirmButton: false });
+                // Recargar gráficos para reflejar el nuevo gasto
+                fetchDataAndDrawCharts();
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error de Validación', html: parseDjangoErrors(data.errors) });
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Error de Red', text: 'Error de red o del servidor. Intenta de nuevo.' });
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Guardar Gasto';
+        }
+    }
+
+    // Envío del formulario de Nueva Categoría (desde modal anidado)
+    async function handleCategoriaGastoSubmit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const submitButton = document.getElementById('guardarCategoriaGastoBtn');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        
+        try {
+            const response = await fetch(CATEGORIA_GASTO_FORM_URL, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await response.json();
+            if (response.ok) {
+                categoriaGastoModalInstance.hide();
+                form.reset();
+                
+                // Actualizar el select del formulario padre (Gasto) con la nueva categoría
+                const selectCategoria = document.getElementById('id_categoria');
+                const newOption = new Option(data.categoria_nombre, data.categoria_id, true, true);
+                selectCategoria.add(newOption);
+                
+                // Volver a mostrar el modal principal
+                gastoModalInstance.show();
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error de Validación', html: parseDjangoErrors(data.errors) });
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Error de Red', text: 'Error de red o del servidor. Intenta de nuevo.' });
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Guardar';
+        }
+    }
+    
+    // --- Inicialización del DOM ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Configuración de instancias de Modales Bootstrap
+        const gastoModalEl = document.getElementById('gastoModal');
+        const categoriaGastoModalEl = document.getElementById('categoriaGastoModal');
+        gastoModalInstance = new bootstrap.Modal(gastoModalEl);
+        categoriaGastoModalInstance = new bootstrap.Modal(categoriaGastoModalEl);
+        
+        // Asignación de Listeners de Formularios
+        const gastoForm = document.getElementById('gastoForm');
+        gastoForm.addEventListener('submit', handleGastoSubmit);
+        const categoriaGastoForm = document.getElementById('categoriaGastoForm');
+        categoriaGastoForm.addEventListener('submit', handleCategoriaGastoSubmit);
+        
+        // Limpieza automática de formularios al cerrar modales
+        gastoModalEl.addEventListener('hidden.bs.modal', () => { gastoForm.reset(); });
+        categoriaGastoModalEl.addEventListener('hidden.bs.modal', () => { categoriaGastoForm.reset(); });
+        
+        // Carga inicial de datos y gráficos
+        fetchDataAndDrawCharts();
+        
+        // Listener para el botón de filtrado
+        document.getElementById('filterButton').addEventListener('click', fetchDataAndDrawCharts);
+        
+        // Listeners para actualización dinámica del link de Excel al cambiar fechas
+        document.getElementById('startDate').addEventListener('change', updateExcelLink);
+        document.getElementById('endDate').addEventListener('change', updateExcelLink);
+    });
+
 </script>
-{% endblock %}
+{% endblock extra_js %}

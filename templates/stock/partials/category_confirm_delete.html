@@ -1,14 +1,30 @@
+{# templates/stock/partials/category_confirm_delete.html #}
+{# ========================================================================== #}
+{# MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE CATEGORÍA                          #}
+{# ========================================================================== #}
+{# Esta plantilla parcial se carga dinámicamente dentro de un modal.          #}
+{# Su función es solicitar confirmación antes de eliminar una categoría.      #}
+{#                                                                            #}
+{# Características:                                                           #}
+{# 1. Muestra el nombre de la categoría a eliminar para evitar errores.       #}
+{# 2. Utiliza 'submitModalForm' para procesar la eliminación vía AJAX         #}
+{#    sin recargar la página completa.                                        #}
+{# ========================================================================== #}
+
 <div class="modal-header">
     <h5 class="modal-title">Confirmar Eliminación</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
+
 <div class="modal-body">
     <p>¿Estás seguro de que quieres eliminar la categoría "{{ object.nombre }}"?</p>
 </div>
+
 <form method="post" action="{{ request.path }}" onsubmit="return submitModalForm(this)">
     {% csrf_token %}
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        
         <button type="submit" class="btn btn-danger">Sí, eliminar</button>
     </div>
 </form>

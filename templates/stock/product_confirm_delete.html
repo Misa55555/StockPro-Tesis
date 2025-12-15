@@ -1,14 +1,30 @@
+{# templates/stock/product_confirm_delete.html #}
+{# ========================================================================== #}
+{# MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE PRODUCTO                           #}
+{# ========================================================================== #}
+{# Esta plantilla define el contenido del modal para confirmar la eliminación #}
+{# permanente de un producto del inventario. Se carga dinámicamente vía AJAX. #}
+{#                                                                            #}
+{# Funcionalidad:                                                             #}
+{# - Advierte al usuario sobre la irreversibilidad de la acción.              #}
+{# - Envía una solicitud POST a la vista correspondiente para ejecutar        #}
+{#   el borrado en la base de datos.                                          #}
+{# ========================================================================== #}
+
 <div class="modal-header">
     <h5 class="modal-title">Confirmar Eliminación Permanente</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
+
 <div class="modal-body">
     <p>...</p>
 </div>
+
 <form method="post" action="{{ request.path }}">
     {% csrf_token %}
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        
         <button type="submit" class="btn btn-danger">Sí, eliminar permanentemente</button>
     </div>
 </form>

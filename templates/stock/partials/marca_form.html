@@ -1,7 +1,22 @@
+{# templates/stock/partials/marca_form.html #}
+{# ========================================================================== #}
+{# FORMULARIO PARCIAL DE MARCA (MODAL)                                        #}
+{# ========================================================================== #}
+{# Esta plantilla parcial renderiza el formulario para gestionar las Marcas   #}
+{# (Brands) dentro de una ventana modal.                                      #}
+{#                                                                            #}
+{# Características:                                                           #}
+{# 1. Reutilización: Se usa tanto para Crear (CreateView) como para Editar    #}
+{#    (UpdateView) marcas.                                                    #}
+{# 2. Título Dinámico: Se adapta según si existe una instancia ('object').    #}
+{# 3. Envío AJAX: Interceptado por 'submitModalForm' para evitar recargas.    #}
+{# ========================================================================== #}
+
 <div class="modal-header">
     <h5 class="modal-title">{% if object %}Editar Marca{% else %}Nueva Marca{% endif %}</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
+
 <form method="post" action="{{ request.path }}" onsubmit="return submitModalForm(this)">
     {% csrf_token %}
     <div class="modal-body">

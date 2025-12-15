@@ -1,8 +1,24 @@
+{# templates/stock/category_list.html #}
+{# ========================================================================== #}
+{# LISTADO DE GESTIÓN DE CATEGORÍAS                                           #}
+{# ========================================================================== #}
+{# Esta plantilla renderiza la interfaz administrativa para las categorías    #}
+{# de productos. Permite visualizar, crear, editar y cambiar el estado        #}
+{# (activar/ocultar) de las categorías del sistema.                           #}
+{#                                                                            #}
+{# Características:                                                           #}
+{# 1. Filtrado de registros ocultos mediante parámetro GET.                   #}
+{# 2. Creación y Edición asíncrona mediante ventana modal (openModal).        #}
+{# 3. Tabla de datos con indicadores de estado visuales.                      #}
+{# ========================================================================== #}
+
 {% extends "base.html" %}
 {% block title %}Gestionar Categorías{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Gestión de Categorías</h1>
+    
     <button class="btn btn-primary" onclick="openModal('{% url 'stock_app:category_add' %}')">
         Añadir Categoría
     </button>
@@ -31,10 +47,14 @@
                 </tr>
             </thead>
             <tbody>
+                {# Iteración sobre el queryset de categorías pasado por la vista #}
                 {% for categoria in categorias %}
+                
                 <tr class="{% if not categoria.is_active %}table-secondary text-muted{% endif %}">
                     <td>{{ categoria.nombre }}</td>
+                    
                     <td>{% if categoria.es_visible_online %}Sí{% else %}No{% endif %}</td>
+                    
                     <td>
                         {% if categoria.is_active %}
                             <span class="badge bg-success">Activa</span>
@@ -42,6 +62,7 @@
                             <span class="badge bg-danger">Oculta</span>
                         {% endif %}
                     </td>
+                    
                     <td class="text-end">
                         <button class="btn btn-sm btn-warning" onclick="openModal('{% url 'stock_app:category_edit' categoria.pk %}')">Editar</button>
                         

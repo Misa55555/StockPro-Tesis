@@ -1,3 +1,17 @@
+{# templates/stock/partials/marca_update_prices.html #}
+{# ========================================================================== #}
+{# MODAL DE ACTUALIZACIÓN MASIVA DE PRECIOS POR MARCA                         #}
+{# ========================================================================== #}
+{# Esta plantilla parcial gestiona la interfaz para aplicar ajustes           #}
+{# porcentuales (aumentos o descuentos) a todos los productos asociados       #}
+{# a una marca específica.                                                    #}
+{#                                                                            #}
+{# Características:                                                           #}
+{# 1. Feedback de Impacto: Muestra cuántos productos serán afectados.         #}
+{# 2. Validación de Entrada: Input numérico para porcentajes positivos/negativos.#}
+{# 3. Procesamiento Asíncrono: Utiliza 'submitModalForm' para ejecución AJAX. #}
+{# ========================================================================== #}
+
 <div class="modal-header bg-info text-white">
     <h5 class="modal-title">
         <i class="fas fa-tags me-2"></i>Actualizar Precios: {{ marca.nombre }}
@@ -8,6 +22,7 @@
 <form method="post" action="{% url 'stock_app:marca_update_prices' marca.pk %}" onsubmit="return submitModalForm(this)">
     {% csrf_token %}
     <div class="modal-body">
+        
         <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle me-2"></i>
             Esta acción modificará el precio de <strong>{{ cantidad_productos }}</strong> productos asociados a esta marca.
