@@ -1,3 +1,17 @@
+{# templates/ventas/pos.html #}
+{# ========================================================================== #}
+{# PUNTO DE VENTA (POS)                                                       #}
+{# ========================================================================== #}
+{# Esta plantilla contiene la interfaz principal de facturación.              #}
+{# Funciona con una lógica intensiva en JavaScript (Frontend) para ofrecer    #}
+{# una experiencia de usuario ágil sin recargas de página.                    #}
+{#                                                                            #}
+{# Componentes Principales:                                                   #}
+{# 1. Catálogo (Izquierda): Búsqueda y selección de productos.                #}
+{# 2. Ticket/Carrito (Derecha): Lista de ítems, totales y control de pago.    #}
+{# 3. Lógica JS: Gestión de estado (posTicket), cálculos y envío AJAX.        #}
+{# ========================================================================== #}
+
 {% extends 'base.html' %}
 {% load static %}
 
@@ -48,6 +62,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">Ticket Actual</h6>
                 </div>
                 <div class="card-body" id="ticket-body">
+                    
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
                             <strong>Cliente:</strong>
@@ -106,6 +121,7 @@
 
 {% block extra_js %}
 <script>
+    // Utilidad para obtener el token CSRF de las cookies (necesario para fetch POST)
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -123,15 +139,13 @@
     const csrftoken = getCookie('csrftoken');
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Referencias al DOM
         const productSearchInput = document.getElementById('product-search-input');
         const productListContainer = document.getElementById('product-list-container');
         const ticketItemsContainer = document.getElementById('ticket-items-container');
-        
-        // Referencias nuevas para totales
         const ticketSubtotal = document.getElementById('ticket-subtotal');
         const ticketTotalAmount = document.getElementById('ticket-total-amount');
         const discountInput = document.getElementById('discount-input');
-
         const payButton = document.getElementById('pay-button');
         const allProductItems = Array.from(productListContainer.getElementsByClassName('product-item'));
         const assignCustomerBtn = document.getElementById('assign-customer-btn');
@@ -140,20 +154,25 @@
         const modalContentWrapper = document.getElementById('modal-content-wrapper');
         const ticketCustomerName = document.getElementById('ticket-customer-name');
 
-        // ESTADO DEL TICKET (ACTUALIZADO CON DESCUENTO)
+        // ======================================================================
+        // GESTIÓN DEL ESTADO (STATE MANAGEMENT)
+        // ======================================================================
+        // Objeto central que almacena toda la información de la venta en curso.
         let posTicket = {
-            items: {},
+            items: {},       // Diccionario: { id_producto: {cantidad, precio, nombre...} }
             subtotal: 0,
             discount: 0,
             total: 0,
-            clienteId: null,
+            clienteId: null, // Null = Consumidor Final
             metodoPagoId: null
         };
         
+        // Función: Añadir producto al estado
         function addProductToTicket(product) {
             const stock = parseFloat(product.stock);
             const currentQuantity = posTicket.items[product.id] ? posTicket.items[product.id].quantity : 0;
 
+            // Validación de Stock Frontend
             if (currentQuantity >= stock) {
                 Swal.fire({ icon: 'warning', title: 'Stock Agotado', text: `No hay más stock disponible para "${product.name}".`});
                 return;
@@ -170,9 +189,10 @@
                     quantity: 1
                 };
             }
-            renderTicket();
+            renderTicket(); // Re-renderizar UI
         }
         
+        // Función: Modificar cantidad (+/-)
         function updateQuantity(productId, change) {
             const item = posTicket.items[productId];
             if (!item) return;
@@ -185,14 +205,18 @@
             }
 
             if (newQuantity <= 0) {
-                delete posTicket.items[productId];
+                delete posTicket.items[productId]; // Eliminar del carrito si es 0
             } else {
                 item.quantity = newQuantity;
             }
             renderTicket();
         }
 
-        // FUNCIÓN DE RENDERIZADO (ACTUALIZADA CON CÁLCULOS)
+        // ======================================================================
+        // RENDERIZADO (UI & CÁLCULOS)
+        // ======================================================================
+        // Esta función reconstruye el HTML del carrito y recalcula los totales
+        // cada vez que cambia el estado (posTicket).
         function renderTicket() {
             ticketItemsContainer.innerHTML = Object.keys(posTicket.items).length === 0 ? '<p class="text-center text-muted py-5">Añada productos al ticket</p>' : '';
             
@@ -202,6 +226,7 @@
                 const lineTotal = item.quantity * item.price;
                 newSubtotal += lineTotal;
                 
+                // HTML dinámico para cada ítem del carrito
                 const itemHTML = `
                     <div class="ticket-item mb-2 p-2 border rounded bg-white" data-product-id="${item.id}">
                         <div class="d-flex justify-content-between">
@@ -220,10 +245,10 @@
                 ticketItemsContainer.innerHTML += itemHTML;
             }
 
-            // Cálculos finales
+            // Cálculos Financieros
             posTicket.subtotal = newSubtotal;
             
-            // Evitar que el descuento sea mayor que el subtotal
+            // Validación: El descuento no puede exceder el total
             if (posTicket.discount > posTicket.subtotal) {
                 posTicket.discount = posTicket.subtotal;
                 discountInput.value = posTicket.discount.toFixed(2);
@@ -231,17 +256,19 @@
             
             posTicket.total = Math.max(0, posTicket.subtotal - posTicket.discount);
 
-            // Actualizar DOM
+            // Actualización del DOM
             ticketSubtotal.textContent = `$${posTicket.subtotal.toFixed(2)}`;
             ticketTotalAmount.textContent = `$${posTicket.total.toFixed(2)}`;
         }
 
+        // Helper: Asignar cliente seleccionado desde el modal
         function selectClient(cliente) {
             posTicket.clienteId = cliente.id;
             ticketCustomerName.textContent = cliente.text.split(' - ')[0];
             mainModal.hide();
         }
 
+        // Helper: Imprimir ticket (abre ventana de impresión del navegador)
         function printTicket() {
             const ticketToPrint = document.getElementById('ticket-to-print');
             if (ticketToPrint) {
@@ -254,7 +281,11 @@
             }
         }
 
-        // EVENT LISTENERS
+        // ======================================================================
+        // EVENT LISTENERS (INTERACTIVIDAD)
+        // ======================================================================
+        
+        // 1. Buscador de Productos (Filtrado local)
         productSearchInput.addEventListener('keyup', function() {
             const searchTerm = this.value.toLowerCase();
             allProductItems.forEach(item => {
@@ -264,10 +295,12 @@
             });
         });
 
+        // 2. Click en producto del catálogo -> Añadir al carrito
         productListContainer.addEventListener('click', function(event) {
             const productItem = event.target.closest('.product-item');
             if (productItem) {
                 event.preventDefault();
+                // Extracción de datos desde data-attributes
                 const product = {
                     id: productItem.dataset.productId,
                     name: productItem.dataset.productName,
@@ -278,6 +311,7 @@
             }
         });
 
+        // 3. Botones +/- dentro del carrito
         ticketItemsContainer.addEventListener('click', function(event) {
             const button = event.target.closest('.quantity-change');
             if (button) {
@@ -287,7 +321,7 @@
             }
         });
 
-        // LISTENER NUEVO PARA EL DESCUENTO
+        // 4. Input de Descuento
         discountInput.addEventListener('input', function(e) {
             let val = parseFloat(e.target.value);
             if (isNaN(val) || val < 0) val = 0;
@@ -295,18 +329,21 @@
             renderTicket();
         });
 
+        // 5. Botón Asignar Cliente (Carga modal vía AJAX)
         assignCustomerBtn.addEventListener('click', function() {
-            // (Tu lógica de cliente existente aquí, no cambia)
              fetch("{% url 'ventas_app:crear_cliente_modal' %}")
                 .then(response => response.text())
                 .then(html => {
                     modalContentWrapper.innerHTML = html;
                     mainModal.show();
+                    // Inicialización de Select2 para búsqueda AJAX de clientes
                     $('#customer-search-select').select2({
                         dropdownParent: $(mainModalEl),
                         placeholder: 'Escribe un nombre o DNI...',
                         ajax: { url: "{% url 'ventas_app:buscar_clientes' %}", dataType: 'json', delay: 250, data: params => ({ term: params.term }), processResults: data => ({ results: data }) }
                     }).on('select2:select', e => selectClient(e.params.data));
+                    
+                    // Manejo del formulario de creación rápida de cliente
                     modalContentWrapper.addEventListener('submit', function(e) {
                         if (e.target && e.target.id === 'create-customer-form') {
                             e.preventDefault();
@@ -318,9 +355,11 @@
                 });
         });
 
+        // 6. BOTÓN PAGAR (ENVÍO AL BACKEND)
         payButton.addEventListener('click', function() {
             posTicket.metodoPagoId = document.getElementById('payment-method-select').value;
             
+            // Validaciones previas al envío
             if (Object.keys(posTicket.items).length === 0) {
                 Swal.fire({icon: 'error', title: 'Ticket Vacío', text: 'Añada productos antes de cobrar.'});
                 return;
@@ -330,10 +369,11 @@
                 return;
             }
             
-            // Deshabilitar botón para evitar doble cobro
+            // Bloqueo de UI para evitar doble envío
             payButton.disabled = true;
             payButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
+            // Envío del objeto 'posTicket' al servidor
             fetch("{% url 'ventas_app:pos' %}", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
@@ -342,15 +382,19 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
+                    // ÉXITO: Mostrar modal con el comprobante
                     modalContentWrapper.innerHTML = data.modal_html;
                     mainModal.show();
-                    // Listeners para el modal de ticket
+                    
+                    // Configurar listeners del modal de éxito
                     document.getElementById('new-sale-btn').addEventListener('click', () => window.location.reload());
                     document.getElementById('print-ticket-btn').addEventListener('click', printTicket);
-                    // Forzar recarga al cerrar el modal manualmente también
+                    
+                    // Forzar recarga al cerrar el modal para limpiar estado
                     mainModalEl.addEventListener('hidden.bs.modal', () => window.location.reload(), { once: true });
 
                 } else {
+                    // ERROR: Mostrar alerta y reactivar botón
                     Swal.fire({ icon: 'error', title: 'Error', text: data.message });
                     payButton.disabled = false;
                     payButton.innerHTML = '<i class="fas fa-cash-register"></i> PAGAR / COBRAR';
@@ -364,6 +408,7 @@
             });
         });
 
+        // Renderizado inicial (Carrito vacío)
         renderTicket();
     });
 </script>
