@@ -25,7 +25,6 @@
             <thead>
                 <tr>
                     <th>Nombre</th>
-                    <th>Visible Online</th>
                     <th>Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
@@ -34,7 +33,6 @@
                 {% for categoria in categorias %}
                 <tr class="{% if not categoria.is_active %}table-secondary text-muted{% endif %}">
                     <td>{{ categoria.nombre }}</td>
-                    <td>{% if categoria.es_visible_online %}Sí{% else %}No{% endif %}</td>
                     <td>
                         {% if categoria.is_active %}
                             <span class="badge bg-success">Activa</span>
@@ -54,7 +52,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="text-center">No hay categorías para mostrar.</td>
+                    <td colspan="3" class="text-center">No hay categorías para mostrar.</td>
                 </tr>
                 {% endfor %}
             </tbody>
